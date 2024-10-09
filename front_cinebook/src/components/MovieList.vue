@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
     <div>
       <input v-model="query" @keyup.enter="searchMovies" placeholder="Search for movies..." />
       <button @click="searchMovies">Search</button>
@@ -33,4 +33,4 @@
       },
     },
   };
-  </script> -->
+  </script>

@@ -4,39 +4,29 @@
         <p>Inscrivez-vous ou connectez-vous pour commencer.</p>
     </div>
     <div v-if="errorMessage">{{ errorMessage }}</div>
-        <!-- <div v-else>{{ protectedData }}</div> -->
-    <!-- <MovieList /> -->
+    <MovieList />
     <LogoutBouton />
-    <!-- <PopularMovies /> -->
+    <PopularMovies />
 </template>
 
 <script>
 // import { fetchProtectedResource } from '../utils/api';
 import LogoutBouton from '@/components/LogoutBouton.vue';
-// import MovieList from '@/components/MovieList.vue';
-// import PopularMovies from '@/components/PopularMovies.vue';
+import MovieList from '@/components/MovieList.vue';
+import PopularMovies from '@/components/PopularMovies.vue';
 
 export default {
     name: 'Dashboard',
     components: {
         LogoutBouton,
-        // MovieList,
-        // PopularMovies,
+        MovieList,
+        PopularMovies,
     },
     data() {
         return {
-            // protectedData: null,
-            // errorMessage: '',
+            errorMessage: '',
         };
     },
-    // async mounted() {
-    //     try {
-    //         const data = await fetchProtectedResource('protected-resource');
-    //         this.protectedData = data;
-    //     } catch (error) {
-    //         this.errorMessage = error.message;
-    //     }
-    // },
 };
 </script>
 

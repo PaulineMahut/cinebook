@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
   <div>
     <h2>Popular Movies</h2>
     <div v-if="errorMessage">{{ errorMessage }}</div>
@@ -59,4 +59,4 @@ export default {
   width: 100%;
   height: auto;
 }
-</style> -->
+</style>
