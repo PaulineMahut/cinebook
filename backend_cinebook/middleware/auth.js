@@ -9,7 +9,11 @@ const authenticateJWT = (req, res, next) => {
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-      if (err) {
+    if (err) {
+      if (err.name === 'TokenExpiredError') {
+        console.log('Token expired:', err); // Log des erreurs de token expiré
+        return res.status(401).json({ message: 'TokenExpired' }); // Envoyer un message spécifique
+      }
           console.log('Token verification error:', err); // Log des erreurs de vérification
           return res.sendStatus(403);
       }
@@ -18,4 +22,14 @@ const authenticateJWT = (req, res, next) => {
       next();
   });
 };
+
+// services/authService.js
+export function logout() {
+  localStorage.removeItem('token'); // Supprimer le token du localStorage
+  window.location.href = '/login'; // Rediriger vers la page de connexion
+}
+
+
 export default authenticateJWT;
+
+

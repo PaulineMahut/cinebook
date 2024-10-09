@@ -5,24 +5,15 @@ import Register from '../views/Register.vue';
 import Dashboard from '../views/Dashboard.vue';
 import MovieDetails from '../views/MovieDetails.vue';
 import { isTokenExpired } from '../utils/auth';
+import { logout } from '../utils/auth'; // Assurez-vous que le chemin est correct
 
 
 const routes = [
-    { path: '/', component: Home },
-    { path: '/login', component: Login },
-    { path: '/register', component: Register },
-    {
-        path: '/dashboard',
-        name: 'Dashboard',
-        component: Dashboard,
-        // meta: { requiresAuth: true },
-    },
-    {
-        path: '/movie/:id',
-        name: 'MovieDetails',
-        component: MovieDetails,
-        // meta: { requiresAuth: true },
-    },
+    { path: '/', name: 'Home', component: Home },
+    { path: '/login', name: 'Login', component: Login },
+    { path: '/register', name: 'Register', component: Register },
+    { path: '/dashboard', name: 'Dashboard', component: Dashboard },
+    { path: '/movie/:id', name: 'MovieDetails', component: MovieDetails },
 ];
 
 const router = createRouter({
@@ -32,15 +23,25 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token');
-    if (to.matched.some(record => record.meta.requiresAuth)) {
-        if (isTokenExpired(token)) {
-            next({ path: '/login' });
+
+    console.log(`Navigating to: ${to.name}`); // Log de la route
+    console.log(`Token: ${token}`); // Log du token
+
+    if (isTokenExpired(token)) {
+        console.log('Token expired, logging out...');
+        logout(); // Déconnexion automatique
+
+        // Vérifiez si la route est autorisée pour les non-authentifiés
+        if (to.name === 'Login' || to.name === 'Home' || to.name === 'Register') {
+            next(); // Permettre l'accès
         } else {
-            next();
+            next({ name: 'Login' }); // Redirige vers la page de connexion
         }
     } else {
-        next();
+        next(); // Passe à la route demandée
     }
 });
+
+
 
 export default router;

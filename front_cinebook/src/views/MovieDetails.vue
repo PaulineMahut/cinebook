@@ -5,8 +5,11 @@
     <p>{{ movie.overview }}</p>
     <p>Release Date: {{ movie.release_date }}</p>
     <p>Rating: {{ movie.vote_average }}</p>
-    <button @click="addMovieToDatabase(movie.id)">Add to Database</button>
-  </div>
+    <button @click="isMovieInDatabase ? removeMovieFromDatabase(movie.id) : addMovieToDatabase(movie.id)">
+      {{ isMovieInDatabase ? 'Remove from Database' : 'Add to Database' }}
+    </button>
+    <button @click="addMovieToDatabase(movie.id)">Add to Database</button> 
+  </div> 
   <div v-else>
     <p>Loading...</p>
   </div>
@@ -20,6 +23,7 @@ export default {
     return {
       movie: null,
       errorMessage: '',
+      isMovieInDatabase: false,
     };
   },
   methods: {
@@ -27,10 +31,35 @@ export default {
       try {
         const movieId = this.$route.params.id;
         this.movie = await fetchMovieDetails(movieId);
+
+        await this.checkIfMovieExists(this.movie.id); // Appel de la vérification ici
+
       } catch (error) {
         this.errorMessage = error.message;
       }
     },
+
+    async checkIfMovieExists(movieId) {
+      try {
+        const token = localStorage.getItem('token'); // Récupérez le token du stockage local
+
+        const response = await fetch(`http://localhost:3000/api/movies/${movieId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`, // Ajoutez le token à l'en-tête
+          },
+        });
+
+        if (response.ok) {
+          this.isMovieInDatabase = true; // Le film existe dans la base de données
+        } else {
+          this.isMovieInDatabase = false; // Le film n'existe pas
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
     async addMovieToDatabase(movieId) {
     try {
         const movieDetails = await fetchMovieDetails(movieId);
@@ -56,11 +85,35 @@ export default {
         }
 
         const addedMovie = await response.json();
-        console.log('Movie added:', addedMovie);
+      console.log('Movie added:', addedMovie);
+            this.isMovieInDatabase = true;
+
     } catch (error) {
         console.error(error);
     }
-},
+    },
+
+    async removeMovieFromDatabase(movieId) {
+      try {
+        const token = localStorage.getItem('token'); // Récupérez le token du stockage local
+
+        const response = await fetch(`http://localhost:3000/api/movies/${movieId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`, // Ajoutez le token à l'en-tête
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to remove movie from database');
+        }
+
+        console.log('Movie removed');
+        this.isMovieInDatabase = false; // Mettre à jour l'état du bouton
+      } catch (error) {
+        console.error(error);
+      }
+    },
 
     getPosterUrl(path) {
       return `https://image.tmdb.org/t/p/w500${path}`;

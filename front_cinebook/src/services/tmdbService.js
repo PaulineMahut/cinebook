@@ -34,46 +34,46 @@ export async function fetchPopularMovies() {
 
 // FAVORIS
 
-export async function fetchFavorites() {
-    const response = await fetch(`${BACKEND_URL}/favorites`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch favorites');
-    }
-    return await response.json();
-  }
+// export async function fetchFavorites() {
+//     const response = await fetch(`${BACKEND_URL}/favorites`, {
+//       method: 'GET',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//       },
+//     });
+//     if (!response.ok) {
+//       throw new Error('Failed to fetch favorites');
+//     }
+//     return await response.json();
+//   }
   
-  export async function addFavorite(movieId) {
-    const token = localStorage.getItem('token'); // Récupérez le token
-    const response = await fetch('http://localhost:3000/favorites', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`, // Utilisez le token ici
-        },
-        body: JSON.stringify({ movieId }), // Assurez-vous que c'est movieId
-    });
+//   export async function addFavorite(movieId) {
+//     const token = localStorage.getItem('token'); // Récupérez le token
+//     const response = await fetch('http://localhost:3000/favorites', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//             'Authorization': `Bearer ${token}`, // Utilisez le token ici
+//         },
+//         body: JSON.stringify({ movieId }), // Assurez-vous que c'est movieId
+//     });
 
-    if (!response.ok) {
-        const errorText = await response.text(); // Obtenez le texte de la réponse
-        throw new Error(`Failed to add to favorites: ${errorText}`); // Incluez le message d'erreur
-    }
-    return await response.json();
-}
+//     if (!response.ok) {
+//         const errorText = await response.text(); // Obtenez le texte de la réponse
+//         throw new Error(`Failed to add to favorites: ${errorText}`); // Incluez le message d'erreur
+//     }
+//     return await response.json();
+// }
 
   
-  export async function removeFavorite(id) {
-    const response = await fetch(`${BACKEND_URL}/favorites/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to remove from favorites');
-    }
-  }
+//   export async function removeFavorite(id) {
+//     const response = await fetch(`${BACKEND_URL}/favorites/${id}`, {
+//       method: 'DELETE',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//       },
+//     });
+//     if (!response.ok) {
+//       throw new Error('Failed to remove from favorites');
+//     }
+//   }

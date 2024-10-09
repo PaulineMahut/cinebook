@@ -92,84 +92,52 @@ app.post('/api/movies/add', authenticateJWT, async (req, res) => {
     }
 });
 
-
-
-
-app.post('/api/movies', async (req, res) => {
-    const { title, overview, posterPath, releaseDate, voteAverage } = req.body;
-
+// Endpoint pour vérifier si un film existe déjà dans la base de données
+app.get('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
+    const tmdbId = parseInt(req.params.tmdbId);
+    const userId = req.user.id; // Récupérez l'ID de l'utilisateur
+  
     try {
-        const movie = await prisma.movie.create({
-            data: {
-                title,
-                overview,
-                posterPath,
-                voteAverage,
-            },
-        });
-        res.status(201).json({ message: 'Movie created', movie });
+      const movie = await prisma.movie.findUnique({
+        where: { tmdbId: tmdbId },
+      });
+  
+      if (movie) {
+        return res.status(200).json(movie); // Le film existe
+      }
+  
+      res.status(404).json({ error: 'Movie not found' }); // Le film n'existe pas
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Movie creation failed' });
+      console.error(error);
+      res.status(500).json({ error: 'Failed to retrieve movie' });
     }
-});
-
-
-// POST /favorites
-app.post('/favorites', authenticateJWT, async (req, res) => {
-    console.log('Request Body:', req.body); // Ajoutez cette ligne
-    const { movieId } = req.body;
-    const userId = req.user.id;
-
-    // Vérifiez que les valeurs sont définies
-    if (!userId || !movieId) {
-        return res.status(400).json({ message: 'userId and movieId must be provided' });
-    }
-
+  });
+  
+  // Endpoint pour supprimer un film de la base de données
+  app.delete('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
+    const tmdbId = parseInt(req.params.tmdbId);
+    const userId = req.user.id; // Récupérez l'ID de l'utilisateur
+  
     try {
-        const favorite = await prisma.favorite.create({
-            data: {
-                userId: userId,
-                movieId: movieId,
-            },
-        });
-        res.status(201).json(favorite);
+      const movie = await prisma.movie.findUnique({
+        where: { tmdbId: tmdbId },
+      });
+  
+      if (!movie) {
+        return res.status(404).json({ error: 'Movie not found' });
+      }
+  
+      await prisma.movie.delete({
+        where: { id: movie.id },
+      });
+  
+      res.status(204).send(); // Renvoie un statut 204 No Content
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Failed to add to favorites' });
+      console.error(error);
+      res.status(500).json({ error: 'Failed to remove movie' });
     }
-});
+  });
 
-
-// DELETE /favorites/:id
-app.delete('/favorites/:id', authenticateJWT, async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        await prisma.favorite.delete({
-            where: { id: parseInt(id) }, // Assurez-vous que l'ID est un entier
-        });
-        res.status(204).send();
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Failed to remove from favorites' });
-    }
-});
-
-// GET /favorites
-app.get('/favorites', authenticateJWT, async (req, res) => {
-    const userId = req.user.id;
-
-    try {
-        const favorites = await prisma.favorite.findMany({
-            where: { userId },
-        });
-        res.json(favorites);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Failed to fetch favorites' });
-    }
-});
 
 app.get('/api/protected', authenticateJWT, (req, res) => {
     res.json({ message: 'This is a protected route', user: req.user });
