@@ -70,73 +70,133 @@ app.post('/api/movies/add', authenticateJWT, async (req, res) => {
             where: { tmdbId: tmdbId }, // Rechercher par tmdbId
         });
 
-        if (existingMovie) {
-            return res.status(400).json({ error: 'Movie already exists in the database' });
+        let movieId;
+
+        if (!existingMovie) {
+            // Si le film n'existe pas, créez-le
+            const movie = await prisma.movie.create({
+                data: {
+                    title,
+                    overview,
+                    voteAverage,
+                    tmdbId,
+                },
+            });
+            movieId = movie.id; // Obtenez l'ID du nouveau film
+        } else {
+            movieId = existingMovie.id; // Utilisez l'ID de l'existant
         }
 
-        // Ajoutez le film à la base de données
-        const movie = await prisma.movie.create({
+        // Ajoutez l'association dans UserMovie
+        await prisma.userMovie.create({
             data: {
-                title,
-                overview,
-                voteAverage,
-                tmdbId,
-                userId, // Associez le film à l'utilisateur
+                userId: userId,
+                movieId: movieId,
             },
         });
 
-        res.status(201).json(movie); // Retournez le film ajouté
+        res.status(201).json({ message: 'Movie added to user successfully.' }); // Retournez le message
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to add movie' });
     }
 });
 
+
 // Endpoint pour vérifier si un film existe déjà dans la base de données
 app.get('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
     const tmdbId = parseInt(req.params.tmdbId);
     const userId = req.user.id; // Récupérez l'ID de l'utilisateur
-  
+
     try {
-      const movie = await prisma.movie.findUnique({
-        where: { tmdbId: tmdbId },
-      });
-  
-      if (movie) {
-        return res.status(200).json(movie); // Le film existe
-      }
-  
-      res.status(404).json({ error: 'Movie not found' }); // Le film n'existe pas
+        const movie = await prisma.movie.findUnique({
+            where: { tmdbId: tmdbId },
+        });
+
+        if (movie) {
+            return res.status(200).json(movie); // Le film existe
+        }
+
+        res.status(404).json({ error: 'Movie not found' }); // Le film n'existe pas
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Failed to retrieve movie' });
+        console.error(error);
+        res.status(500).json({ error: 'Failed to retrieve movie' });
     }
-  });
-  
-  // Endpoint pour supprimer un film de la base de données
-  app.delete('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
+});
+
+app.delete('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
     const tmdbId = parseInt(req.params.tmdbId);
-    const userId = req.user.id; // Récupérez l'ID de l'utilisateur
-  
+    const userId = req.user.userId; // Récupérez l'ID de l'utilisateur
+
     try {
-      const movie = await prisma.movie.findUnique({
-        where: { tmdbId: tmdbId },
-      });
-  
-      if (!movie) {
-        return res.status(404).json({ error: 'Movie not found' });
-      }
-  
-      await prisma.movie.delete({
-        where: { id: movie.id },
-      });
-  
-      res.status(204).send(); // Renvoie un statut 204 No Content
+        // Vérifiez d'abord si l'association existe
+        const userMovie = await prisma.userMovie.findFirst({
+            where: {
+                userId: userId,
+                movie: {
+                    tmdbId: tmdbId,
+                },
+            },
+        });
+
+        if (!userMovie) {
+            return res.status(404).json({ error: 'Movie not found in user collection' });
+        }
+
+        // Supprimez l'association de l'utilisateur avec le film
+        await prisma.userMovie.delete({
+            where: {
+                id: userMovie.id,
+            },
+        });
+
+        // Ensuite, vérifiez s'il n'y a plus d'associations pour le film avant de le supprimer
+        const movie = await prisma.movie.findUnique({
+            where: { tmdbId: tmdbId },
+        });
+
+        if (!movie) {
+            return res.status(404).json({ error: 'Movie not found' });
+        }
+
+        // Supprimez le film
+        await prisma.movie.delete({
+            where: { id: movie.id },
+        });
+
+        res.status(204).send(); // Renvoie un statut 204 No Content
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Failed to remove movie' });
+        console.error(error);
+        res.status(500).json({ error: 'Failed to remove movie' });
     }
-  });
+});
+
+
+// Endpoint pour vérifier si un utilisateur a déjà ajouté un film
+app.get('/api/userMovies/:tmdbId', authenticateJWT, async (req, res) => {
+    const tmdbId = parseInt(req.params.tmdbId);
+    const userId = req.user.userId;
+
+    try {
+        const userMovie = await prisma.userMovie.findFirst({
+            where: {
+                userId: userId,
+                movie: {
+                    tmdbId: tmdbId,
+                },
+            },
+        });
+
+        if (userMovie) {
+            return res.status(200).json({ exists: true }); // Le film est déjà associé à l'utilisateur
+        }
+
+        res.status(404).json({ exists: false }); // Le film n'est pas associé à l'utilisateur
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to check movie association' });
+    }
+});
 
 
 app.get('/api/protected', authenticateJWT, (req, res) => {

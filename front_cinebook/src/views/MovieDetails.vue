@@ -40,25 +40,26 @@ export default {
     },
 
     async checkIfMovieExists(movieId) {
-      try {
+    try {
         const token = localStorage.getItem('token'); // Récupérez le token du stockage local
 
-        const response = await fetch(`http://localhost:3000/api/movies/${movieId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`, // Ajoutez le token à l'en-tête
-          },
+        const response = await fetch(`http://localhost:3000/api/userMovies/${movieId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Ajoutez le token à l'en-tête
+            },
         });
 
         if (response.ok) {
-          this.isMovieInDatabase = true; // Le film existe dans la base de données
+            this.isMovieInDatabase = true; // Le film existe pour cet utilisateur
         } else {
-          this.isMovieInDatabase = false; // Le film n'existe pas
+            this.isMovieInDatabase = false; // Le film n'existe pas pour cet utilisateur
         }
-      } catch (error) {
+    } catch (error) {
         console.error(error);
-      }
-    },
+    }
+},
+
 
     async addMovieToDatabase(movieId) {
     try {
