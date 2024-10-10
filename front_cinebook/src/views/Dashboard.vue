@@ -4,16 +4,17 @@
         <p>Inscrivez-vous ou connectez-vous pour commencer.</p>
     </div>
     <div v-if="errorMessage">{{ errorMessage }}</div>
+    <FavoriteMovies />
     <MovieList />
     <LogoutBouton />
     <PopularMovies />
 </template>
 
 <script>
-// import { fetchProtectedResource } from '../utils/api';
 import LogoutBouton from '@/components/LogoutBouton.vue';
 import MovieList from '@/components/MovieList.vue';
 import PopularMovies from '@/components/PopularMovies.vue';
+import FavoriteMovies from '@/components/FavoriteMovies.vue'; // Import du composant
 
 export default {
     name: 'Dashboard',
@@ -21,6 +22,7 @@ export default {
         LogoutBouton,
         MovieList,
         PopularMovies,
+        FavoriteMovies,
     },
     data() {
         return {

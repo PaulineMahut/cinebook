@@ -102,7 +102,6 @@ app.post('/api/movies/add', authenticateJWT, async (req, res) => {
     }
 });
 
-
 // Endpoint pour vérifier si un film existe déjà dans la base de données
 app.get('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
     const tmdbId = parseInt(req.params.tmdbId);
@@ -171,7 +170,6 @@ app.delete('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
     }
 });
 
-
 // Endpoint pour vérifier si un utilisateur a déjà ajouté un film
 app.get('/api/userMovies/:tmdbId', authenticateJWT, async (req, res) => {
     const tmdbId = parseInt(req.params.tmdbId);
@@ -198,9 +196,37 @@ app.get('/api/userMovies/:tmdbId', authenticateJWT, async (req, res) => {
     }
 });
 
+app.get('/api/movies', authenticateJWT, async (req, res) => {
+    try {
+        const userId = req.user.userId; // Récupérez l'ID de l'utilisateur connecté
+        const userMovies = await prisma.userMovie.findMany({
+            where: { userId: userId },
+            include: { movie: true }, // Inclure les détails du film
+        });
+
+        const result = userMovies.map(userMovie => ({
+            id: userMovie.movie.id,
+            title: userMovie.movie.title,
+            tmdbId: userMovie.movie.tmdbId,
+        }));
+
+        res.json(result); // Retourner les films en JSON
+    } catch (error) {
+        console.error('Error fetching movies:', error);
+        res.status(500).send('Server error');
+    }
+});
+
 
 app.get('/api/protected', authenticateJWT, (req, res) => {
     res.json({ message: 'This is a protected route', user: req.user });
+});
+
+
+app._router.stack.forEach((r) => {
+    if (r.route) {
+        console.log(`${r.route.path} - ${Object.keys(r.route.methods).join(', ')}`);
+    }
 });
 
 const PORT = process.env.PORT || 3000;

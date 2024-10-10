@@ -8,7 +8,6 @@
     <button @click="isMovieInDatabase ? removeMovieFromDatabase(movie.id) : addMovieToDatabase(movie.id)">
       {{ isMovieInDatabase ? 'Remove from Database' : 'Add to Database' }}
     </button>
-    <button @click="addMovieToDatabase(movie.id)">Add to Database</button> 
   </div> 
   <div v-else>
     <p>Loading...</p>
