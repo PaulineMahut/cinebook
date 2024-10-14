@@ -61,10 +61,28 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.post('/api/movies/add', authenticateJWT, async (req, res) => {
-    const { title, overview, voteAverage, tmdbId } = req.body;
+    const { title, overview, voteAverage, tmdbId, genreIds } = req.body;
     const userId = req.user.userId; // Utiliser le champ userId du token
 
     try {
+        // Vérifiez et créez les genres si nécessaire
+        const genreRecords = await Promise.all(
+            genreIds.map(async (id) => {
+                // Vérifiez si le genre existe déjà
+                let genre = await prisma.genre.findUnique({
+                    where: { id: id }, // Rechercher par ID de genre
+                });
+
+                // Si le genre n'existe pas, créez-le
+                if (!genre) {
+                    genre = await prisma.genre.create({
+                        data: { id: id, name: `Genre-${id}` }, // Remplacez par le nom de genre approprié
+                    });
+                }
+                return genre;
+            })
+        );
+
         // Vérifiez si le film existe déjà
         const existingMovie = await prisma.movie.findUnique({
             where: { tmdbId: tmdbId }, // Rechercher par tmdbId
@@ -80,6 +98,10 @@ app.post('/api/movies/add', authenticateJWT, async (req, res) => {
                     overview,
                     voteAverage,
                     tmdbId,
+                    // Connectez les genres ici
+                    genres: {
+                        connect: genreRecords.map((genre) => ({ id: genre.id })), // Connectez les genres existants
+                    },
                 },
             });
             movieId = movie.id; // Obtenez l'ID du nouveau film
@@ -95,12 +117,14 @@ app.post('/api/movies/add', authenticateJWT, async (req, res) => {
             },
         });
 
-        res.status(201).json({ message: 'Movie added to user successfully.' }); // Retournez le message
+        res.status(201).json({ message: 'Movie added to user successfully.' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to add movie' });
     }
 });
+
+
 
 // Endpoint pour vérifier si un film existe déjà dans la base de données
 app.get('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
@@ -218,6 +242,7 @@ app.get('/api/movies', authenticateJWT, async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
 
 // Endpoint pour recommander des films basés sur les genres des films ajoutés par l'utilisateur
 app.get('/api/recommendations', authenticateJWT, async (req, res) => {

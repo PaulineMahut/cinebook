@@ -21,6 +21,8 @@ model Movie {
     voteAverage Float
     tmdbId     Int @unique
     userMovies  UserMovie[]
+    genres      Genre[]     @relation("MovieGenres")
+
 }
 
 model UserMovie {
@@ -29,4 +31,10 @@ model UserMovie {
     movieId   Int
     user      User  @relation(fields: [userId], references: [id])
     movie     Movie @relation(fields: [movieId], references: [id], onDelete: Cascade) // onDelete: Cascade pour supprimer l'association
+}
+
+model Genre {
+  id        Int      @id @default(autoincrement())
+  name      String
+  movies    Movie[]  @relation("MovieGenres")
 }

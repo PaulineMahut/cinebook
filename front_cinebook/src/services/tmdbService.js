@@ -1,6 +1,8 @@
-const API_KEY = '925a9043f860f19987be96d64f2332c8';
-const BASE_URL = 'https://api.themoviedb.org/3';
-const BACKEND_URL = 'http://localhost:3000'; // URL de votre backend
+import { config } from '../../config';
+
+const API_KEY = config.apiKey;
+const BASE_URL = config.baseUrl;
+const BACKEND_URL = config.backendUrl;
 
 
 export async function fetchMovies(query) {
@@ -74,19 +76,19 @@ export async function fetchSimilarMovies(genreId) {
 }
 
 export async function fetchRecommendations() {
-  const token = localStorage.getItem('token'); // Récupérez le token du stockage local
-  const response = await fetch('http://localhost:3000/api/recommendations', {
-      method: 'GET',
-      headers: {
-          'Authorization': `Bearer ${token}`, // Ajoutez le token à l'en-tête
-      },
-  });
+    const token = localStorage.getItem('token'); // Récupérez le token du stockage local
+    const response = await fetch('http://localhost:3000/api/recommendations', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`, // Ajoutez le token à l'en-tête
+        },
+    });
 
-  if (!response.ok) {
-      throw new Error('Échec de la récupération des recommandations');
-  }
+    if (!response.ok) {
+        throw new Error('Échec de la récupération des recommandations');
+    }
 
-  return response.json(); // Retourner les films recommandés
+    return response.json(); // Retourner les films recommandés
 }
 
 
