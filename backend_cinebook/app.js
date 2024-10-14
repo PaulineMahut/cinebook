@@ -123,6 +123,7 @@ app.get('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
     }
 });
 
+// Endpoint pour supprimer un film
 app.delete('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
     const tmdbId = parseInt(req.params.tmdbId);
     const userId = req.user.userId; // Récupérez l'ID de l'utilisateur
@@ -196,6 +197,7 @@ app.get('/api/userMovies/:tmdbId', authenticateJWT, async (req, res) => {
     }
 });
 
+// Endpoint pour récuperer les films favoris des utilisateurs si un utilisateur a déjà ajouté un film
 app.get('/api/movies', authenticateJWT, async (req, res) => {
     try {
         const userId = req.user.userId; // Récupérez l'ID de l'utilisateur connecté
@@ -216,6 +218,79 @@ app.get('/api/movies', authenticateJWT, async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
+// Endpoint pour recommander des films basés sur les genres des films ajoutés par l'utilisateur
+app.get('/api/recommendations', authenticateJWT, async (req, res) => {
+    const userId = req.user.userId; // Récupérez l'ID de l'utilisateur connecté
+
+    try {
+        // Récupérer tous les films ajoutés par l'utilisateur
+        const userMovies = await prisma.userMovie.findMany({
+            where: { userId: userId },
+            include: { movie: true }, // Inclure les détails du film
+        });
+
+        // Vérifier si l'utilisateur a ajouté des films
+        if (userMovies.length === 0) {
+            return res.json([]); // Si aucun film n'est ajouté, renvoyer un tableau vide
+        }
+
+        // Extraire les IDs des films
+        const movieIds = userMovies.map(userMovie => userMovie.movie.id);
+
+        // Récupérer les genres des films ajoutés
+        const genres = await prisma.movie.findMany({
+            where: { id: { in: movieIds } },
+            include: {
+                userMovies: {
+                    include: {
+                        user: true,
+                    },
+                },
+            },
+        });
+
+        // Assurez-vous que genres n'est pas vide avant d'essayer d'extraire les ids
+        if (genres.length === 0) {
+            return res.json([]); // Pas de genres à partir des films de l'utilisateur
+        }
+
+        const genreIds = []; // Pour stocker les IDs des genres
+        genres.forEach(genre => {
+            // Si les userMovies existent pour le film
+            if (genre.userMovies && genre.userMovies.length > 0) {
+                genre.userMovies.forEach(userMovie => {
+                    if (!genreIds.includes(userMovie.movie.id)) {
+                        genreIds.push(userMovie.movie.id); // Assurez-vous d'inclure uniquement les genres uniques
+                    }
+                });
+            }
+        });
+
+        // Rechercher des films avec les genres récupérés
+        const recommendedMovies = await prisma.movie.findMany({
+            where: {
+                id: {
+                    notIn: movieIds, // Exclure les films déjà ajoutés par l'utilisateur
+                },
+                userMovies: {
+                    some: {
+                        movieId: {
+                            in: genreIds,
+                        },
+                    },
+                },
+            },
+        });
+
+        res.json(recommendedMovies); // Retourner les films recommandés
+    } catch (error) {
+        console.error('Error fetching recommendations:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+
 
 
 app.get('/api/protected', authenticateJWT, (req, res) => {

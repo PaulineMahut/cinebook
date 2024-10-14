@@ -5,6 +5,15 @@
     <p>{{ movie.overview }}</p>
     <p>Release Date: {{ movie.release_date }}</p>
     <p>Rating: {{ movie.vote_average }}</p>
+    
+    <!-- Affichage des genres -->
+    <p>
+      <strong>Genres:</strong>
+      <span v-for="(genre, index) in movie.genres" :key="genre.id">
+        {{ genre.name }}<span v-if="index < movie.genres.length - 1">, </span>
+      </span>
+    </p>
+
     <button @click="isMovieInDatabase ? removeMovieFromDatabase(movie.id) : addMovieToDatabase(movie.id)">
       {{ isMovieInDatabase ? 'Remove from Database' : 'Add to Database' }}
     </button>
@@ -30,7 +39,7 @@ export default {
       try {
         const movieId = this.$route.params.id;
         this.movie = await fetchMovieDetails(movieId);
-
+        
         await this.checkIfMovieExists(this.movie.id); // Appel de la vérification ici
 
       } catch (error) {
@@ -39,7 +48,7 @@ export default {
     },
 
     async checkIfMovieExists(movieId) {
-    try {
+      try {
         const token = localStorage.getItem('token'); // Récupérez le token du stockage local
 
         const response = await fetch(`http://localhost:3000/api/userMovies/${movieId}`, {
@@ -54,16 +63,15 @@ export default {
         } else {
             this.isMovieInDatabase = false; // Le film n'existe pas pour cet utilisateur
         }
-    } catch (error) {
+      } catch (error) {
         console.error(error);
-    }
-},
-
+      }
+    },
 
     async addMovieToDatabase(movieId) {
-    try {
+      try {
         const movieDetails = await fetchMovieDetails(movieId);
-
+        
         const token = localStorage.getItem('token'); // Récupérez le token du stockage local
 
         const response = await fetch('http://localhost:3000/api/movies/add', {
@@ -77,6 +85,7 @@ export default {
                 overview: movieDetails.overview,
                 voteAverage: movieDetails.vote_average,
                 tmdbId: movieDetails.id, // Assurez-vous d'inclure l'ID du film de TMDB
+                genreIds: movieDetails.genres.map(genre => genre.id), // Inclure les IDs de genres
             }),
         });
 
@@ -85,12 +94,12 @@ export default {
         }
 
         const addedMovie = await response.json();
-      console.log('Movie added:', addedMovie);
-            this.isMovieInDatabase = true;
+        console.log('Movie added:', addedMovie);
+        this.isMovieInDatabase = true;
 
-    } catch (error) {
+      } catch (error) {
         console.error(error);
-    }
+      }
     },
 
     async removeMovieFromDatabase(movieId) {
