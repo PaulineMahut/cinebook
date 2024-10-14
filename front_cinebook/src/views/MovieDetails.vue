@@ -86,6 +86,8 @@ export default {
                 voteAverage: movieDetails.vote_average,
                 tmdbId: movieDetails.id, // Assurez-vous d'inclure l'ID du film de TMDB
                 genreIds: movieDetails.genres.map(genre => genre.id), // Inclure les IDs de genres
+                genres: movieDetails.genres.map(genre => genre.name), // Inclure les noms des genres
+
             }),
         });
 

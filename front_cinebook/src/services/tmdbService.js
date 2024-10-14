@@ -32,6 +32,24 @@ export async function fetchPopularMovies() {
     return data.results;
 }
 
+// Service pour récupérer les films de l'utilisateur avec leurs genres
+export async function fetchUserAddedMoviesWithGenres() {
+  const token = localStorage.getItem('token'); // Récupérez le token du stockage local
+  const response = await fetch('http://localhost:3000/api/userMovies', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`, // Ajoutez le token à l'en-tête
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch user added movies with genres');
+  }
+
+  return response.json(); // Retourner les films ajoutés par l'utilisateur avec genres
+}
+
+
 
 export async function fetchMovieGenres() {
   const response = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}`);

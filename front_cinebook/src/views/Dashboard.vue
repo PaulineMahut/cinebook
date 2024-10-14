@@ -15,7 +15,8 @@
     <LogoutBouton />
     <PopularMovies />
     <RandomGenreMovies />
-    <SimilarGenreMovies />
+    <SearchByGenre />
+    <RecommendedMovies />
 </template>
 
 <script>
@@ -24,8 +25,9 @@ import MovieList from '@/components/MovieList.vue';
 import PopularMovies from '@/components/PopularMovies.vue';
 import FavoriteMovies from '@/components/FavoriteMovies.vue'; // Import du composant
 import { fetchMovieGenres } from '@/services/tmdbService'; // Importer votre fonction
-import SimilarGenreMovies from '@/components/SimilarGenreMovies.vue'; // Import du nouveau composant
 import RandomGenreMovies from '../components/RandomGenreMovies.vue';
+import SearchByGenre from '../components/SearchByGenre.vue';
+import RecommendedMovies from '../components/RecommendedMovies.vue';
 
 export default {
     name: 'Dashboard',
@@ -34,7 +36,8 @@ export default {
         MovieList,
         PopularMovies,
         FavoriteMovies,
-        SimilarGenreMovies,
+        RecommendedMovies,
+        SearchByGenre,
         RandomGenreMovies,
     },
     data() {
