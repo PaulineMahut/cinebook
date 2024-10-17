@@ -409,10 +409,10 @@ app.get('/api/user/profile/:id', async (req, res) => {
 
 /////// FRIENDS /////////
 
-// Endpoint pour ajouter un ami
+// Endpoint pour envoyer une demande d'ami
 app.post('/api/friends/add', authenticateJWT, async (req, res) => {
-    const userId = req.user.userId; // L'utilisateur qui ajoute un ami
-    const { friendId } = req.body; // L'ami à ajouter
+    const userId = req.user.userId; // L'utilisateur qui envoie la demande
+    const { friendId } = req.body; // L'utilisateur à ajouter
 
     try {
         // Vérifier si l'ami existe
@@ -427,8 +427,10 @@ app.post('/api/friends/add', authenticateJWT, async (req, res) => {
         // Vérifier si la relation d'amitié existe déjà
         const existingFriendship = await prisma.friendship.findFirst({
             where: {
-                userId: userId,
-                friendId: friendId,
+                OR: [
+                    { userId: userId, friendId: friendId },
+                    { userId: friendId, friendId: userId },
+                ],
             },
         });
 
@@ -436,30 +438,25 @@ app.post('/api/friends/add', authenticateJWT, async (req, res) => {
             return res.status(400).json({ error: 'Friendship already exists' });
         }
 
-        // Ajouter l'ami pour l'utilisateur A
-        await prisma.friendship.create({
+        // Envoyer une notification à l'utilisateur cible
+        await prisma.notification.create({
             data: {
-                userId: userId,
-                friendId: friendId,
+                userId: friendId,      // L'utilisateur qui reçoit la notification
+                senderId: userId,       // L'utilisateur qui envoie la notification
+                type: 'friend_request',  // Type de la notification
             },
         });
 
-        // Ajouter également l'utilisateur A dans la liste des amis de l'utilisateur B
-        await prisma.friendship.create({
-            data: {
-                userId: friendId, // L'utilisateur B
-                friendId: userId, // L'utilisateur A
-            },
-        });
-
-        res.status(201).json({ message: 'Friend added successfully' });
+        res.status(201).json({ message: 'Friend request sent successfully' });
     } catch (error) {
-        console.error('Error adding friend:', error);
-        res.status(500).json({ error: 'Failed to add friend' });
+        console.error('Error sending friend request:', error);
+        res.status(500).json({ error: 'Failed to send friend request' });
     }
 });
 
-// Endpoint pour supprimer un ami
+
+
+
 // Endpoint pour supprimer un ami
 app.delete('/api/friends/remove', authenticateJWT, async (req, res) => {
     const userId = req.user.userId; // ID de l'utilisateur connecté
@@ -494,7 +491,6 @@ app.delete('/api/friends/remove', authenticateJWT, async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur lors de la suppression de l\'ami' });
     }
 });
-
 
 // Endpoint pour récupérer les amis de l'utilisateur connecté
 app.get('/api/friends', authenticateJWT, async (req, res) => {
@@ -549,6 +545,95 @@ app.get('/api/friends/:userId', authenticateJWT, async (req, res) => {
 });
 
 
+// NOTIFICATIONS
+// Route pour envoyer une notification de demande d'ami
+app.post('/api/notifications/send', authenticateJWT, async (req, res) => {
+    const { recipientId, type } = req.body;
+    const senderId = req.user.userId;
+
+    try {
+        const notification = await prisma.notification.create({
+            data: {
+                userId: recipientId,      // L'utilisateur qui reçoit la notification
+                senderId: senderId,       // L'utilisateur qui envoie la notification
+                type: type || 'friend_request',  // Type de la notification
+            },
+        });
+        res.status(201).json(notification);
+    } catch (error) {
+        console.error('Erreur lors de l\'envoi de la notification:', error);
+        res.status(500).json({ error: 'Impossible d\'envoyer la notification' });
+    }
+});
+
+// Route pour récupérer les notifications de l'utilisateur connecté
+app.get('/api/notifications', authenticateJWT, async (req, res) => {
+    const userId = req.user.userId;
+
+    try {
+        const notifications = await prisma.notification.findMany({
+            where: {
+                userId: userId,
+                status: 'pending',
+            },
+            include: {
+                sender: { select: { id: true, email: true, pseudo: true } }, // Informations sur l'expéditeur
+            },
+        });
+        res.status(200).json(notifications);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des notifications:', error);
+        res.status(500).json({ error: 'Impossible de récupérer les notifications' });
+    }
+});
+
+// Route pour accepter ou refuser une demande d'ami
+app.post('/api/notifications/respond', authenticateJWT, async (req, res) => {
+    const { notificationId, response } = req.body; // response = 'accepted' ou 'rejected'
+    const userId = req.user.userId;
+
+    try {
+        const notification = await prisma.notification.findUnique({
+            where: { id: notificationId },
+        });
+
+        if (!notification || notification.userId !== userId) {
+            return res.status(404).json({ error: 'Notification not found or not authorized' });
+        }
+
+        if (response === 'accepted') {
+            // Ajouter l'utilisateur comme ami seulement si la demande est acceptée
+            await prisma.friendship.create({
+                data: {
+                    userId: userId,
+                    friendId: notification.senderId,
+                },
+            });
+
+            await prisma.friendship.create({
+                data: {
+                    userId: notification.senderId,
+                    friendId: userId,
+                },
+            });
+        }
+
+        // Mettre à jour le statut de la notification
+        await prisma.notification.update({
+            where: { id: notificationId },
+            data: { status: response },
+        });
+
+        res.status(200).json({ message: 'Response recorded' });
+    } catch (error) {
+        console.error('Error responding to notification:', error);
+        res.status(500).json({ error: 'Failed to respond to notification' });
+    }
+});
+
+
+
+// N'importe quelle route non définie renverra une erreur 404
 
 
 

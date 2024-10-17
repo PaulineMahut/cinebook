@@ -11,6 +11,7 @@ import Profile from '../views/Profile.vue';
 import Recherche from '../views/Recherche.vue';
 import UserProfile from '../components/UserProfile.vue';
 import Friends from '../components/Friends.vue';
+import Notification from '../views/Notifications.vue';
 
 const routes = [
     { path: '/', name: 'Home', component: Home },
@@ -27,6 +28,8 @@ const routes = [
         component: UserProfile,
     },
     { path: '/friends/:id', name: 'friends', component: Friends },
+    { path: '/notification', name: 'Notification', component: Notification },
+
 
 ];
 
