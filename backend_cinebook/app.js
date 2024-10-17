@@ -320,7 +320,7 @@ app.get('/api/recommendations', authenticateJWT, async (req, res) => {
     }
 });
 
-// Endpoint pour récupérer tous les utilisateurs
+//
 app.get('/api/users', authenticateJWT, async (req, res) => {
     const search = req.query.search || '';
 
@@ -336,8 +336,8 @@ app.get('/api/users', authenticateJWT, async (req, res) => {
 
         // Filtrer les utilisateurs en mémoire
         const filteredUsers = users.filter(user => 
-            user.pseudo.toLowerCase().includes(search.toLowerCase()) || 
-            user.email.toLowerCase().includes(search.toLowerCase())
+            (user.pseudo && user.pseudo.toLowerCase().includes(search.toLowerCase())) || 
+            (user.email && user.email.toLowerCase().includes(search.toLowerCase()))
         );
 
         res.status(200).json(filteredUsers);
@@ -346,6 +346,7 @@ app.get('/api/users', authenticateJWT, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch users' });
     }
 });
+
 
 app.get('/api/user/profile', authenticateJWT, async (req, res) => {
     try {
@@ -370,37 +371,48 @@ app.get('/api/user/profile', authenticateJWT, async (req, res) => {
     }
 });
 
-
+// Endpoint pour récupérer le profil utilisateur avec le nombre d'amis
 app.get('/api/user/profile/:id', async (req, res) => {
-    const userId = parseInt(req.params.id); // Assurez-vous que l'ID est un entier
+    const userId = parseInt(req.params.id); // Conversion de l'ID en entier
     console.log(`Recherche de l'utilisateur avec l'ID : ${userId}`);
-  
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { email: true, pseudo: true } // Sélectionnez uniquement les champs nécessaires
-      });
-  
-      if (!user) {
-        console.error(`Utilisateur avec l'ID ${userId} non trouvé`);
-        return res.status(404).json({ error: 'Utilisateur non trouvé' });
-      }
-  
-      console.log(`Utilisateur trouvé : ${user.email}, ${user.pseudo}`);
-      res.json(user); // Envoie l'utilisateur trouvé en réponse
-    } catch (error) {
-      console.error('Erreur lors de la recherche dans la base de données:', error);
-      res.status(500).json({ error: 'Erreur serveur' });
-    }
-  });
-  
 
-  
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { 
+                email: true, 
+                pseudo: true,
+                friends: { // Récupérer la relation d'amitié
+                    select: { friendId: true } // Sélectionner uniquement l'ID de l'ami
+                }
+            }
+        });
+
+        if (!user) {
+            console.error(`Utilisateur avec l'ID ${userId} non trouvé`);
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+
+        const friendCount = user.friends.length; // Compter le nombre d'amis
+        console.log(`Utilisateur trouvé : ${user.email}, ${user.pseudo}, Nombre d'amis : ${friendCount}`);
+        
+        res.json({ 
+            email: user.email, 
+            pseudo: user.pseudo, 
+            friendCount 
+        }); // Renvoie le nombre d'amis avec d'autres informations
+    } catch (error) {
+        console.error('Erreur lors de la recherche dans la base de données:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+/////// FRIENDS /////////
 
 // Endpoint pour ajouter un ami
 app.post('/api/friends/add', authenticateJWT, async (req, res) => {
-    const userId = req.user.userId;
-    const { friendId } = req.body;
+    const userId = req.user.userId; // L'utilisateur qui ajoute un ami
+    const { friendId } = req.body; // L'ami à ajouter
 
     try {
         // Vérifier si l'ami existe
@@ -424,11 +436,19 @@ app.post('/api/friends/add', authenticateJWT, async (req, res) => {
             return res.status(400).json({ error: 'Friendship already exists' });
         }
 
-        // Ajouter l'ami
+        // Ajouter l'ami pour l'utilisateur A
         await prisma.friendship.create({
             data: {
                 userId: userId,
                 friendId: friendId,
+            },
+        });
+
+        // Ajouter également l'utilisateur A dans la liste des amis de l'utilisateur B
+        await prisma.friendship.create({
+            data: {
+                userId: friendId, // L'utilisateur B
+                friendId: userId, // L'utilisateur A
             },
         });
 
@@ -440,12 +460,13 @@ app.post('/api/friends/add', authenticateJWT, async (req, res) => {
 });
 
 // Endpoint pour supprimer un ami
+// Endpoint pour supprimer un ami
 app.delete('/api/friends/remove', authenticateJWT, async (req, res) => {
-    const userId = req.user.userId;
+    const userId = req.user.userId; // ID de l'utilisateur connecté
     const { friendId } = req.body;
 
     try {
-        // Vérifier si la relation d'amitié existe
+        // Vérifier si l'amitié existe pour cet utilisateur
         const friendship = await prisma.friendship.findFirst({
             where: {
                 userId: userId,
@@ -454,20 +475,26 @@ app.delete('/api/friends/remove', authenticateJWT, async (req, res) => {
         });
 
         if (!friendship) {
-            return res.status(404).json({ error: 'Friendship not found' });
+            return res.status(404).json({ error: 'Cette amitié n\'existe pas' });
         }
 
-        // Supprimer l'amitié
-        await prisma.friendship.delete({
-            where: { id: friendship.id },
+        // Supprimer l'amitié dans les deux sens
+        await prisma.friendship.deleteMany({
+            where: {
+                OR: [
+                    { userId: userId, friendId: friendId },
+                    { userId: friendId, friendId: userId },
+                ],
+            },
         });
 
-        res.status(200).json({ message: 'Friend removed successfully' });
+        res.status(200).json({ message: 'Ami supprimé avec succès' });
     } catch (error) {
-        console.error('Error removing friend:', error);
-        res.status(500).json({ error: 'Failed to remove friend' });
+        console.error('Erreur lors de la suppression de l\'ami:', error);
+        res.status(500).json({ error: 'Erreur serveur lors de la suppression de l\'ami' });
     }
 });
+
 
 // Endpoint pour récupérer les amis de l'utilisateur connecté
 app.get('/api/friends', authenticateJWT, async (req, res) => {
@@ -493,6 +520,33 @@ app.get('/api/friends', authenticateJWT, async (req, res) => {
     }
   });
   
+// Endpoint pour récupérer les amis d'un utilisateur spécifique
+app.get('/api/friends/:userId', authenticateJWT, async (req, res) => {
+    const userId = parseInt(req.params.userId); // Récupérer l'ID de l'utilisateur cible
+
+    try {
+        // Trouver les amis de l'utilisateur cible (userId)
+        const friends = await prisma.friendship.findMany({
+            where: {
+                userId: userId
+            },
+            include: {
+                friend: { select: { id: true, email: true, pseudo: true } }, // Récupérer les détails de l'ami
+            },
+        });
+
+        const friendList = friends.map(friendship => ({
+            id: friendship.friend.id,
+            email: friendship.friend.email,
+            pseudo: friendship.friend.pseudo,
+        }));
+
+        res.status(200).json(friendList);
+    } catch (error) {
+        console.error('Error fetching friends:', error);
+        res.status(500).json({ error: 'Failed to fetch friends' });
+    }
+});
 
 
 

@@ -10,7 +10,7 @@ import Map from '../views/Map.vue';
 import Profile from '../views/Profile.vue';
 import Recherche from '../views/Recherche.vue';
 import UserProfile from '../components/UserProfile.vue';
-
+import Friends from '../components/Friends.vue';
 
 const routes = [
     { path: '/', name: 'Home', component: Home },
@@ -25,7 +25,8 @@ const routes = [
         path: '/user/:id',  // Route dynamique avec paramètre d'ID
         name: 'UserProfile',
         component: UserProfile,
-      },
+    },
+    { path: '/friends/:id', name: 'friends', component: Friends },
 
 ];
 

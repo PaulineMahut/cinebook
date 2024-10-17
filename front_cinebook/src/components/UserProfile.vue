@@ -1,57 +1,117 @@
 <template>
     <div>
       <h1>Profil de l'utilisateur</h1>
-      <p v-if="user.email">Email : {{ user.email }}</p>
-      <p v-if="user.pseudo">Pseudo : {{ user.pseudo }}</p>
-      <p v-else>Chargement des informations utilisateur...</p>
+      <p>Email : {{ user.email }}</p>
+      <p>Pseudo : {{ user.pseudo }}</p>
+      <p>Nombre d'amis : <router-link :to="{ name: 'friends', params: { id: userId } }">{{ friendCount }}</router-link></p>
+      <button @click="addFriend" v-if="!isFriend">Ajouter en ami</button>
+      <button @click="removeFriend" v-if="isFriend">Retirer de mes amis</button>
     </div>
-    <div>
-        <!-- <FavoriteMovies /> -->
-    </div>
-  </template>
-  
-  <script>
-//   import FavoriteMovies from '@/components/FavoriteMovies.vue';
+</template>
+
+<script>
 export default {
-    // components: {
-    //   FavoriteMovies,
-    // },
     data() {
-      return {
-        user: {
-          email: '',
-          pseudo: '',
-        },
-      };
+        return {
+            user: {
+                email: '',
+                pseudo: '',
+            },
+            friendCount: 0, // Compteur d'amis
+            isFriend: false, // Indique si l'utilisateur connecté est déjà ami
+            userId: null // Ajout de userId ici
+        };
     },
     async mounted() {
-      const userId = this.$route.params.id; // Récupère l'ID de l'utilisateur depuis l'URL
-      console.log(`ID utilisateur récupéré : ${userId}`); // Log pour vérifier l'ID récupéré
-      try {
-        const response = await fetch(`http://localhost:3000/api/user/profile/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-  
-        console.log('Statut de la réponse:', response.status); // Log le statut de la réponse
-  
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('Données utilisateur récupérées:', userData); // Log les données de l'utilisateur
-          this.user.email = userData.email;
-          this.user.pseudo = userData.pseudo;
-        } else {
-          console.error('Erreur lors de la récupération des données utilisateur:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Erreur de récupération du profil utilisateur:', error);
-      }
+        this.userId = this.$route.params.id; // Affecter la valeur de userId
+        await this.loadUserProfile();
     },
-  };
-  </script>
-  
-  <style scoped>
-  /* Ajoutez des styles si nécessaire */
-  </style>
-  
+    methods: {
+        async addFriend() {
+            const friendId = parseInt(this.userId); // Utilisation de this.userId
+            try {
+                const response = await fetch('http://localhost:3000/api/friends/add', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ friendId }),
+                });
+                if (response.ok) {
+                    this.isFriend = true;
+                    alert('Ami ajouté avec succès');
+                    await this.loadUserProfile(); // Rechargez le profil après ajout
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.error);
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'ajout de l\'ami:', error);
+            }
+        },
+
+        async removeFriend() {
+            const friendId = parseInt(this.userId); // Utilisation de this.userId
+            try {
+                const response = await fetch('http://localhost:3000/api/friends/remove', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ friendId }),
+                });
+                if (response.ok) {
+                    this.isFriend = false;
+                    alert('Ami retiré avec succès');
+                    await this.loadUserProfile(); // Rechargez le profil après suppression
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.error);
+                }
+            } catch (error) {
+                console.error('Erreur lors du retrait de l\'ami:', error);
+            }
+        },
+
+        async checkIfFriend(friendId) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/friends`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    },
+                });
+                if (response.ok) {
+                    const friends = await response.json();
+                    this.isFriend = friends.some(friend => friend.id === parseInt(friendId));
+                }
+            } catch (error) {
+                console.error('Erreur lors de la vérification de l\'amitié:', error);
+            }
+        },
+
+        async loadUserProfile() {
+            const userId = this.userId; // Utilisation de this.userId
+            try {
+                const response = await fetch(`http://localhost:3000/api/user/profile/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) {
+                    const userData = await response.json();
+                    this.user = userData; // L'utilisateur est mis à jour
+                    this.friendCount = userData.friendCount; // Nombre d'amis mis à jour
+                    this.checkIfFriend(userId);
+                } else {
+                    console.error('Erreur lors de la récupération des données utilisateur');
+                }
+            } catch (error) {
+                console.error('Erreur de récupération du profil utilisateur:', error);
+            }
+        },
+    },
+};
+</script>
