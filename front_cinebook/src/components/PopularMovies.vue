@@ -23,6 +23,7 @@
 import { defineComponent } from 'vue'
 import { fetchPopularMovies } from '@/services/tmdbService';
 import { Carousel, Navigation, Slide, Pagination } from 'vue3-carousel'; // Importer le carrousel et les slides
+import 'vue3-carousel/dist/carousel.css'
 
 export default {
   components: {
@@ -57,7 +58,7 @@ export default {
 </script>
 
 <style>
-@import './node_modules/vue3-carousel/dist/carousel.css'; /* Assurez-vous que le chemin est correct */
+/* @import './node_modules/vue3-carousel/dist/carousel.css'; Assurez-vous que le chemin est correct */
 
 /* Ajoutez des styles personnalisés si nécessaire */
 .carousel-img {

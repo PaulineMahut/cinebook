@@ -91,7 +91,7 @@
   };
   </script>
   <style>
-  @import './node_modules/vue3-carousel/dist/carousel.css'; /* Assurez-vous que le chemin est correct */
+  /* @import './node_modules/vue3-carousel/dist/carousel.css'; Assurez-vous que le chemin est correct */
   
   /* Ajoutez des styles personnalisés si nécessaire */
   .carousel-img {

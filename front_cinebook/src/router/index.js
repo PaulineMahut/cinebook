@@ -6,14 +6,27 @@ import Dashboard from '../views/Dashboard.vue';
 import MovieDetails from '../views/MovieDetails.vue';
 import { isTokenExpired } from '../utils/auth';
 import { logout } from '../utils/auth'; // Assurez-vous que le chemin est correct
+import Map from '../views/Map.vue';
+import Profile from '../views/Profile.vue';
+import Recherche from '../views/Recherche.vue';
+import UserProfile from '../components/UserProfile.vue';
 
 
 const routes = [
     { path: '/', name: 'Home', component: Home },
     { path: '/login', name: 'Login', component: Login },
     { path: '/register', name: 'Register', component: Register },
+    { path: '/map', name: 'Map', component: Map },
     { path: '/dashboard', name: 'Dashboard', component: Dashboard },
     { path: '/movie/:id', name: 'MovieDetails', component: MovieDetails },
+    { path: '/profile', name: 'Profile', component: Profile },
+    { path: '/recherche', name: 'Recherche', component: Recherche },
+    {
+        path: '/user/:id',  // Route dynamique avec paramètre d'ID
+        name: 'UserProfile',
+        component: UserProfile,
+      },
+
 ];
 
 const router = createRouter({

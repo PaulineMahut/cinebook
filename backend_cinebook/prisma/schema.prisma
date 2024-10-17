@@ -11,7 +11,11 @@ model User {
   id        Int        @id @default(autoincrement())
   email     String     @unique
   password  String
+  pseudo    String?
+  role      Role       @default(USER)
   userMovies UserMovie[]
+  friends   Friendship[] @relation("UserFriends") 
+  friendOf  Friendship[] @relation("FriendsOfUser")
 }
 
 model Movie {
@@ -30,11 +34,24 @@ model UserMovie {
     userId    Int
     movieId   Int
     user      User  @relation(fields: [userId], references: [id])
-    movie     Movie @relation(fields: [movieId], references: [id], onDelete: Cascade) // onDelete: Cascade pour supprimer l'association
+    movie     Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 }
 
 model Genre {
   id        Int      @id @default(autoincrement())
   name      String
   movies    Movie[]  @relation("MovieGenres")
+}
+
+model Friendship {
+  id          Int   @id @default(autoincrement())
+  userId      Int
+  friendId    Int
+  user        User  @relation("UserFriends", fields: [userId], references: [id])
+  friend      User  @relation("FriendsOfUser", fields: [friendId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  USER
 }

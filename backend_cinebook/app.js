@@ -6,7 +6,6 @@ import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import authenticateJWT from './middleware/auth.js';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
 const app = express();
@@ -18,7 +17,7 @@ app.use(bodyParser.json());
 
 // Endpoint pour l'inscription
 app.post('/api/register', async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, role = 'USER' } = req.body;
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -27,6 +26,7 @@ app.post('/api/register', async (req, res) => {
             data: {
                 email,
                 password: hashedPassword,
+                role,
             },
         });
         res.status(201).json({ message: 'User created', user });
@@ -49,7 +49,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+        const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, {
             expiresIn: '1h',
         });
 
@@ -123,8 +123,6 @@ app.post('/api/movies/add', authenticateJWT, async (req, res) => {
         res.status(500).json({ error: 'Failed to add movie' });
     }
 });
-
-
 
 // Endpoint pour vérifier si un film existe déjà dans la base de données
 app.get('/api/movies/:tmdbId', authenticateJWT, async (req, res) => {
@@ -272,7 +270,7 @@ app.get('/api/movies', authenticateJWT, async (req, res) => {
     }
 });
 
-
+// Endpoint pour récuperer les recommandations de films
 app.get('/api/recommendations', authenticateJWT, async (req, res) => {
     const userId = req.user.userId; // Get the userId from the token
 
@@ -322,12 +320,187 @@ app.get('/api/recommendations', authenticateJWT, async (req, res) => {
     }
 });
 
+// Endpoint pour récupérer tous les utilisateurs
+app.get('/api/users', authenticateJWT, async (req, res) => {
+    const search = req.query.search || '';
 
+    try {
+        // Récupérer tous les utilisateurs
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                pseudo: true,
+                email: true,
+            },
+        });
 
+        // Filtrer les utilisateurs en mémoire
+        const filteredUsers = users.filter(user => 
+            user.pseudo.toLowerCase().includes(search.toLowerCase()) || 
+            user.email.toLowerCase().includes(search.toLowerCase())
+        );
 
-app.get('/api/protected', authenticateJWT, (req, res) => {
-    res.json({ message: 'This is a protected route', user: req.user });
+        res.status(200).json(filteredUsers);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
 });
+
+app.get('/api/user/profile', authenticateJWT, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.userId },
+            select: {
+                id: true,
+                email: true,
+                pseudo: true,
+                role: true, // Vous pouvez sélectionner les champs dont vous avez besoin
+            },
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error('Erreur lors de la récupération du profil utilisateur:', error);
+        res.status(500).json({ error: 'Erreur lors de la récupération du profil utilisateur' });
+    }
+});
+
+
+app.get('/api/user/profile/:id', async (req, res) => {
+    const userId = parseInt(req.params.id); // Assurez-vous que l'ID est un entier
+    console.log(`Recherche de l'utilisateur avec l'ID : ${userId}`);
+  
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, pseudo: true } // Sélectionnez uniquement les champs nécessaires
+      });
+  
+      if (!user) {
+        console.error(`Utilisateur avec l'ID ${userId} non trouvé`);
+        return res.status(404).json({ error: 'Utilisateur non trouvé' });
+      }
+  
+      console.log(`Utilisateur trouvé : ${user.email}, ${user.pseudo}`);
+      res.json(user); // Envoie l'utilisateur trouvé en réponse
+    } catch (error) {
+      console.error('Erreur lors de la recherche dans la base de données:', error);
+      res.status(500).json({ error: 'Erreur serveur' });
+    }
+  });
+  
+
+  
+
+// Endpoint pour ajouter un ami
+app.post('/api/friends/add', authenticateJWT, async (req, res) => {
+    const userId = req.user.userId;
+    const { friendId } = req.body;
+
+    try {
+        // Vérifier si l'ami existe
+        const friend = await prisma.user.findUnique({
+            where: { id: friendId },
+        });
+
+        if (!friend) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Vérifier si la relation d'amitié existe déjà
+        const existingFriendship = await prisma.friendship.findFirst({
+            where: {
+                userId: userId,
+                friendId: friendId,
+            },
+        });
+
+        if (existingFriendship) {
+            return res.status(400).json({ error: 'Friendship already exists' });
+        }
+
+        // Ajouter l'ami
+        await prisma.friendship.create({
+            data: {
+                userId: userId,
+                friendId: friendId,
+            },
+        });
+
+        res.status(201).json({ message: 'Friend added successfully' });
+    } catch (error) {
+        console.error('Error adding friend:', error);
+        res.status(500).json({ error: 'Failed to add friend' });
+    }
+});
+
+// Endpoint pour supprimer un ami
+app.delete('/api/friends/remove', authenticateJWT, async (req, res) => {
+    const userId = req.user.userId;
+    const { friendId } = req.body;
+
+    try {
+        // Vérifier si la relation d'amitié existe
+        const friendship = await prisma.friendship.findFirst({
+            where: {
+                userId: userId,
+                friendId: friendId,
+            },
+        });
+
+        if (!friendship) {
+            return res.status(404).json({ error: 'Friendship not found' });
+        }
+
+        // Supprimer l'amitié
+        await prisma.friendship.delete({
+            where: { id: friendship.id },
+        });
+
+        res.status(200).json({ message: 'Friend removed successfully' });
+    } catch (error) {
+        console.error('Error removing friend:', error);
+        res.status(500).json({ error: 'Failed to remove friend' });
+    }
+});
+
+// Endpoint pour récupérer les amis de l'utilisateur connecté
+app.get('/api/friends', authenticateJWT, async (req, res) => {
+    const userId = req.user.userId;
+  
+    try {
+      const friends = await prisma.friendship.findMany({
+        where: { userId },
+        include: {
+          friend: { select: { id: true, email: true } },
+        },
+      });
+  
+      const friendList = friends.map(friendship => ({
+        id: friendship.friend.id,
+        email: friendship.friend.email,
+      }));
+  
+      res.status(200).json(friendList);
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+      res.status(500).json({ error: 'Failed to fetch friends' });
+    }
+  });
+  
+
+
+
+
+
+// app.get('/api/protected', authenticateJWT, (req, res) => {
+//     res.json({ message: 'This is a protected route', user: req.user });
+// });
 
 
 app._router.stack.forEach((r) => {

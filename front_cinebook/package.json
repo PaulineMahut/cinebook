@@ -9,9 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.8",
+    "leaflet": "^1.9.4",
     "path": "^0.12.7",
     "vue": "^3.5.10",
     "vue-router": "^4.4.5",
+    "vue3-carousel": "^0.3.4",
+    "vue3-geolocation": "^1.0.0",
+    "vue3-google-map": "^0.21.0",
     "vuex": "^4.0.2"
   },
   "devDependencies": {

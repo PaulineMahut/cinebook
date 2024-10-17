@@ -20,7 +20,6 @@ const authenticateJWT = (req, res, next) => {
   });
 };
 
-// services/authService.js
 export function logout() {
   localStorage.removeItem('token'); // Supprimer le token du localStorage
   window.location.href = '/login'; // Rediriger vers la page de connexion
