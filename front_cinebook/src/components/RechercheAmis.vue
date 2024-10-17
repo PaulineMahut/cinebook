@@ -15,8 +15,9 @@
         <!-- Afficher les résultats de recherche seulement si au moins 3 caractères sont saisis -->
         <ul v-if="searchResults.length">
           <li v-for="user in searchResults" :key="user.id">
-            <!-- {{ user.pseudo }} Affiche le pseudo au lieu de l'email -->
-            {{ user.email }}
+            <router-link :to="`/user/${user.id}`"> <!-- Lien vers le profil utilisateur -->
+            {{ user.pseudo }} <!-- Affiche le pseudo -->
+          </router-link>
           </li>
         </ul>
         <p v-else-if="searchQuery.length >= 3 && !searchResults.length">
