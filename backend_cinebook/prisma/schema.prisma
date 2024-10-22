@@ -25,21 +25,21 @@ model User {
 }
 
 model Movie {
-    id          Int        @id @default(autoincrement())
-    title       String
-    overview    String
-    voteAverage Float
-    tmdbId     Int @unique
-    userMovies  UserMovie[]
-    genres      Genre[]     @relation("MovieGenres")
+  id          Int        @id @default(autoincrement())
+  title       String
+  overview    String
+  voteAverage Float
+  tmdbId      Int        @unique
+  userMovies  UserMovie[]
+  genres      Genre[]    @relation("MovieGenres")
 }
 
 model UserMovie {
-    id        Int   @id @default(autoincrement())
-    userId    Int
-    movieId   Int
-    user      User  @relation(fields: [userId], references: [id])
-    movie     Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  id        Int   @id @default(autoincrement())
+  userId    Int
+  movieId   Int
+  user      User  @relation(fields: [userId], references: [id])
+  movie     Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 }
 
 model Genre {
@@ -60,6 +60,7 @@ model Notification {
   id        Int      @id @default(autoincrement())
   userId    Int
   senderId  Int
+  groupId   Int?
   type      String
   status    String   @default("pending")
   createdAt DateTime @default(now())
@@ -67,17 +68,19 @@ model Notification {
 
   user      User     @relation("UserNotifications", fields: [userId], references: [id], map: "Notification_User_fkey")
   sender    User     @relation("SenderNotifications", fields: [senderId], references: [id], map: "Notification_Sender_fkey")
+  group     Group?   @relation("GroupNotifications", fields: [groupId], references: [id], map: "Notification_Group_fkey")
 }
 
 model Group {
-  id          Int             @id @default(autoincrement())
-  name        String
-  description String
-  creatorId   Int
-  creator     User            @relation("GroupCreator", fields: [creatorId], references: [id])
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  members     GroupMembership[] @relation("GroupMembers") // Nouvelle relation pour les membres
+  id            Int               @id @default(autoincrement())
+  name          String
+  description   String
+  creatorId     Int
+  creator       User              @relation("GroupCreator", fields: [creatorId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  members       GroupMembership[] @relation("GroupMembers")
+  notifications Notification[]    @relation("GroupNotifications")
 }
 
 model GroupMembership {

@@ -20,6 +20,7 @@
       <router-link to="/add-group">
       <button>Ajouter un Groupe</button>
     </router-link>
+    <UserGroups />
     </div>
 </template>
 
@@ -27,10 +28,12 @@
 <script>
 import { mapState } from 'vuex';
 import FavoriteMovies from '@/components/FavoriteMovies.vue';
+import UserGroups from '@/components/UserGroups.vue';
 
 export default {
   components: {
     FavoriteMovies,
+    UserGroups,
   },
   computed: {
     // On mappe l'état de Vuex pour obtenir le profil utilisateur

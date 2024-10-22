@@ -600,7 +600,6 @@ app.post('/api/notifications/send', authenticateJWT, async (req, res) => {
 });
 
 
-// Route pour récupérer les notifications de l'utilisateur connecté
 app.get('/api/notifications', authenticateJWT, async (req, res) => {
     const userId = req.user.userId; // Assurez-vous que l'utilisateur est authentifié et que son ID est disponible
 
@@ -618,6 +617,12 @@ app.get('/api/notifications', authenticateJWT, async (req, res) => {
                         pseudo: true,
                     },
                 },
+                group: { // Inclure le groupe dans la notification
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
             },
         });
 
@@ -629,8 +634,6 @@ app.get('/api/notifications', authenticateJWT, async (req, res) => {
 });
 
 
-
-// Route pour accepter ou refuser une notification (demande d'ami ou invitation à un groupe)
 // Route pour accepter ou refuser une notification (demande d'ami ou invitation à un groupe)
 app.post('/api/notifications/respond', authenticateJWT, async (req, res) => {
     const { notificationId, response } = req.body; // response = 'accepted' ou 'rejected'
@@ -645,6 +648,12 @@ app.post('/api/notifications/respond', authenticateJWT, async (req, res) => {
                         id: true,
                         email: true,
                         pseudo: true,
+                    },
+                },
+                group: { // Inclure le groupe dans la notification
+                    select: {
+                        id: true,
+                        name: true,
                     },
                 },
             },
@@ -675,7 +684,7 @@ app.post('/api/notifications/respond', authenticateJWT, async (req, res) => {
                 // Ajouter l'utilisateur au groupe
                 await prisma.groupMembership.create({
                     data: {
-                        groupId: notification.groupId,  // Le groupe en question
+                        groupId: notification.group.id,  // Le groupe en question
                         userId: userId,                // L'utilisateur qui accepte l'invitation
                     },
                 });
@@ -685,10 +694,12 @@ app.post('/api/notifications/respond', authenticateJWT, async (req, res) => {
         }
 
         // Mettre à jour le statut de la notification (accepted/rejected)
-        await prisma.notification.update({
+        const updatedNotification = await prisma.notification.update({
             where: { id: notificationId },
             data: { status: response },
         });
+
+        console.log('Notification mise à jour:', updatedNotification);
 
         res.status(200).json({ message: 'Réponse enregistrée' });
     } catch (error) {
@@ -697,10 +708,42 @@ app.post('/api/notifications/respond', authenticateJWT, async (req, res) => {
     }
 });
 
-
 // GROUPS
 
-// Route pour créer un groupe
+app.get('/api/user/groups', authenticateJWT, async (req, res) => {
+    const userId = req.user.userId; // Assurez-vous que l'utilisateur est authentifié et que son ID est disponible
+
+    try {
+        const groups = await prisma.group.findMany({
+            where: {
+                members: {
+                    some: {
+                        userId: userId,
+                    },
+                },
+            },
+            include: {
+                members: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                pseudo: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        res.status(200).json(groups);
+    } catch (error) {
+        console.error('Error retrieving user groups:', error);
+        res.status(500).json({ error: 'Failed to retrieve user groups' });
+    }
+});
+
 app.post('/api/groups', authenticateJWT, async (req, res) => {
     const { name, description, members } = req.body;
     const creatorId = req.user.userId; // Assurez-vous que l'utilisateur est authentifié et que son ID est disponible
@@ -712,11 +755,24 @@ app.post('/api/groups', authenticateJWT, async (req, res) => {
                 description,
                 creatorId,
                 members: {
-                    create: members.map(memberId => ({
-                        userId: memberId,
-                    })),
+                    create: {
+                        userId: creatorId, // Ajouter le créateur en tant que membre du groupe
+                    },
                 },
             },
+        });
+
+        // Créez une notification pour chaque membre sélectionné
+        const notifications = members.map(memberId => ({
+            userId: memberId,
+            senderId: creatorId,
+            type: 'group_invitation',
+            status: 'pending',
+            groupId: group.id, // Utilisez l'ID du groupe nouvellement créé
+        }));
+
+        await prisma.notification.createMany({
+            data: notifications,
         });
 
         res.status(201).json(group);
@@ -726,10 +782,42 @@ app.post('/api/groups', authenticateJWT, async (req, res) => {
     }
 });
 
+app.put('/api/groups/:groupId/members', authenticateJWT, async (req, res) => {
+    const groupId = parseInt(req.params.groupId);
+    const { members } = req.body;
+    const userId = req.user.userId; // Assurez-vous que l'utilisateur est authentifié et que son ID est disponible
 
+    try {
+        // Vérifiez si le groupe existe
+        const group = await prisma.group.findUnique({
+            where: { id: groupId },
+        });
 
-// N'importe quelle route non définie renverra une erreur 404
+        if (!group) {
+            return res.status(404).json({ error: 'Group not found' });
+        }
 
+        // Créez une notification pour chaque membre ajouté
+        const notifications = members.map(memberId => ({
+            userId: memberId,
+            senderId: userId,
+            type: 'group_invitation',
+            status: 'pending',
+            groupId: groupId, // Ajoutez le champ groupId pour la notification
+        }));
+
+        const createdNotifications = await prisma.notification.createMany({
+            data: notifications,
+        });
+
+        console.log('Notifications créées:', createdNotifications);
+
+        res.status(200).json({ message: 'Invitations envoyées' });
+    } catch (error) {
+        console.error('Error updating group members:', error);
+        res.status(500).json({ error: 'Failed to update group members' });
+    }
+});
 
 
 // app.get('/api/protected', authenticateJWT, (req, res) => {
