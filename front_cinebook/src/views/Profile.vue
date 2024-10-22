@@ -14,6 +14,13 @@
   <div>
       <FavoriteMovies />
     </div>
+
+    <div>
+      GROUPES
+      <router-link to="/add-group">
+      <button>Ajouter un Groupe</button>
+    </router-link>
+    </div>
 </template>
 
 

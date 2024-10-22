@@ -12,6 +12,7 @@ import Recherche from '../views/Recherche.vue';
 import UserProfile from '../components/UserProfile.vue';
 import Friends from '../components/Friends.vue';
 import Notification from '../views/Notifications.vue';
+import GroupForm from '@/components/GroupForm.vue';
 
 const routes = [
     { path: '/', name: 'Home', component: Home },
@@ -29,7 +30,11 @@ const routes = [
     },
     { path: '/friends/:id', name: 'friends', component: Friends },
     { path: '/notification', name: 'Notification', component: Notification },
-
+    {
+        path: '/add-group',
+        name: 'AddGroup',
+        component: GroupForm,
+      },
 
 ];
 

@@ -8,17 +8,20 @@ generator client {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
-  password  String
-  pseudo    String?
-  role      Role       @default(USER)
-  userMovies UserMovie[]
-  friends   Friendship[] @relation("UserFriends") 
-  friendOf  Friendship[] @relation("FriendsOfUser")
+  id                     Int                     @id @default(autoincrement())
+  email                  String                  @unique
+  password               String
+  pseudo                 String?
+  role                   Role                    @default(USER)
+  userMovies             UserMovie[]
+  friends                Friendship[]            @relation("UserFriends")
+  friendOf               Friendship[]            @relation("FriendsOfUser")
 
-  receivedNotifications  Notification[] @relation("UserNotifications")
-  sentNotifications      Notification[] @relation("SenderNotifications")
+  receivedNotifications  Notification[]          @relation("UserNotifications")
+  sentNotifications      Notification[]          @relation("SenderNotifications")
+
+  groupsCreated          Group[]                 @relation("GroupCreator")
+  memberships            GroupMembership[]       @relation("UserMembership")
 }
 
 model Movie {
@@ -29,7 +32,6 @@ model Movie {
     tmdbId     Int @unique
     userMovies  UserMovie[]
     genres      Genre[]     @relation("MovieGenres")
-
 }
 
 model UserMovie {
@@ -56,18 +58,35 @@ model Friendship {
 
 model Notification {
   id        Int      @id @default(autoincrement())
-  userId    Int      
-  senderId  Int      
-  type      String   
-  status    String   @default("pending") 
-  createdAt DateTime @default(now())     
-  updatedAt DateTime @updatedAt          
+  userId    Int
+  senderId  Int
+  type      String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relations
-  user      User     @relation("UserNotifications", fields: [userId], references: [id])   
-  sender    User     @relation("SenderNotifications", fields: [senderId], references: [id])
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], map: "Notification_User_fkey")
+  sender    User     @relation("SenderNotifications", fields: [senderId], references: [id], map: "Notification_Sender_fkey")
 }
 
+model Group {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String
+  creatorId   Int
+  creator     User            @relation("GroupCreator", fields: [creatorId], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  members     GroupMembership[] @relation("GroupMembers") // Nouvelle relation pour les membres
+}
+
+model GroupMembership {
+  id        Int  @id @default(autoincrement())
+  userId    Int
+  groupId   Int
+  user      User  @relation("UserMembership", fields: [userId], references: [id])
+  group     Group @relation("GroupMembers", fields: [groupId], references: [id])
+}
 
 enum Role {
   ADMIN
