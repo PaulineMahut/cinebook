@@ -782,6 +782,38 @@ app.post('/api/groups', authenticateJWT, async (req, res) => {
     }
 });
 
+app.get('/api/groups/:id', authenticateJWT, async (req, res) => {
+    const groupId = parseInt(req.params.id);
+
+    try {
+        const group = await prisma.group.findUnique({
+            where: { id: groupId },
+            include: {
+                members: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                pseudo: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!group) {
+            return res.status(404).json({ error: 'Group not found' });
+        }
+
+        res.status(200).json(group);
+    } catch (error) {
+        console.error('Error retrieving group details:', error);
+        res.status(500).json({ error: 'Failed to retrieve group details' });
+    }
+});
+
 app.put('/api/groups/:groupId/members', authenticateJWT, async (req, res) => {
     const groupId = parseInt(req.params.groupId);
     const { members } = req.body;
