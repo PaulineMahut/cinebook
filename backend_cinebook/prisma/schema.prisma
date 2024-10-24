@@ -22,6 +22,7 @@ model User {
 
   groupsCreated          Group[]                 @relation("GroupCreator")
   memberships            GroupMembership[]       @relation("UserMembership")
+  movieLists             MovieList[]             @relation("UserMovieLists")
 }
 
 model Movie {
@@ -66,9 +67,9 @@ model Notification {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User     @relation("UserNotifications", fields: [userId], references: [id], map: "Notification_User_fkey")
-  sender    User     @relation("SenderNotifications", fields: [senderId], references: [id], map: "Notification_Sender_fkey")
-  group     Group?   @relation("GroupNotifications", fields: [groupId], references: [id], map: "Notification_Group_fkey")
+  user      User     @relation("UserNotifications", fields: [userId], references: [id])
+  sender    User     @relation("SenderNotifications", fields: [senderId], references: [id])
+  group     Group?   @relation("GroupNotifications", fields: [groupId], references: [id])
 }
 
 model Group {
@@ -89,6 +90,27 @@ model GroupMembership {
   groupId   Int
   user      User  @relation("UserMembership", fields: [userId], references: [id])
   group     Group @relation("GroupMembers", fields: [groupId], references: [id])
+}
+
+model MovieList {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String
+  userId      Int
+  user        User            @relation("UserMovieLists", fields: [userId], references: [id])
+  items       MovieListItem[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model MovieListItem {
+  id          Int      @id @default(autoincrement())
+  listId      Int
+  list        MovieList @relation(fields: [listId], references: [id])
+  title       String
+  overview    String
+  voteAverage Float
+  tmdbId      Int
 }
 
 enum Role {

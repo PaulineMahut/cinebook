@@ -14,6 +14,7 @@ import Friends from '../components/Friends.vue';
 import Notification from '../views/Notifications.vue';
 import GroupForm from '@/components/GroupForm.vue';
 import GroupDetails from '@/views/GroupDetails.vue';
+import MovieListDetails from '@/views/MovieListDetails.vue';
 
 const routes = [
     { path: '/', name: 'Home', component: Home },
@@ -40,6 +41,12 @@ const routes = [
         path: '/group/:id',
         name: 'GroupDetails',
         component: GroupDetails,
+        props: true,
+    },
+    {
+        path: '/movie-list/:id',
+        name: 'MovieListDetails',
+        component: MovieListDetails,
         props: true,
       },
 

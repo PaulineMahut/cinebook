@@ -22,6 +22,12 @@
     </router-link>
     <UserGroups />
     </div>
+
+    <div>
+      <CreateMovieList />
+      </div>
+
+      <div><UserMovieList/></div>
 </template>
 
 
@@ -29,11 +35,15 @@
 import { mapState } from 'vuex';
 import FavoriteMovies from '@/components/FavoriteMovies.vue';
 import UserGroups from '@/components/UserGroups.vue';
+import CreateMovieList from '../components/CreateMovieList.vue';
+import UserMovieList from '../components/UserMovieList.vue';
 
 export default {
   components: {
     FavoriteMovies,
     UserGroups,
+    CreateMovieList,
+    UserMovieList
   },
   computed: {
     // On mappe l'état de Vuex pour obtenir le profil utilisateur

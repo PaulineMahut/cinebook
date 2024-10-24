@@ -852,6 +852,97 @@ app.put('/api/groups/:groupId/members', authenticateJWT, async (req, res) => {
 });
 
 
+
+// LISTES
+
+// Endpoint pour créer une liste de films
+app.post('/api/movie-lists', authenticateJWT, async (req, res) => {
+    const { name, description } = req.body;
+    const userId = req.user.userId;
+
+    try {
+        const movieList = await prisma.movieList.create({
+            data: {
+                name,
+                description,
+                userId,
+            },
+        });
+
+        res.status(201).json(movieList);
+    } catch (error) {
+        console.error('Error creating movie list:', error);
+        res.status(500).json({ error: 'Failed to create movie list' });
+    }
+});
+
+// Endpoint pour ajouter un film à une liste
+app.post('/api/movie-lists/:listId/items', authenticateJWT, async (req, res) => {
+    const listId = parseInt(req.params.listId);
+    const { title, overview, voteAverage, tmdbId } = req.body;
+
+    try {
+        // Ajoutez le film à la liste
+        const movieListItem = await prisma.movieListItem.create({
+            data: {
+                listId,
+                title,
+                overview,
+                voteAverage,
+                tmdbId,
+            },
+        });
+
+        res.status(201).json(movieListItem);
+    } catch (error) {
+        console.error('Error adding movie to list:', error);
+        res.status(500).json({ error: 'Failed to add movie to list' });
+    }
+});
+
+// Endpoint pour récupérer les listes de films de l'utilisateur
+app.get('/api/movie-lists', authenticateJWT, async (req, res) => {
+    const userId = req.user.userId;
+    console.log(`Fetching movie lists for user with ID: ${userId}`);
+
+    try {
+        const movieLists = await prisma.movieList.findMany({
+            where: { userId },
+            
+        });
+
+        console.log(`Movie lists:`, movieLists);
+        res.status(200).json(movieLists);
+    } catch (error) {
+        console.error('Error retrieving movie lists:', error);
+        res.status(500).json({ error: 'Failed to retrieve movie lists' });
+    }
+});
+
+app.get('/api/movie-lists/:id', authenticateJWT, async (req, res) => {
+    const listId = parseInt(req.params.id);
+    console.log(`Fetching details for movie list with ID: ${listId}`);
+
+    try {
+        const movieList = await prisma.movieList.findUnique({
+            where: { id: listId },
+            include: {
+                items: true, // Inclure les items
+            },
+        });
+
+        if (!movieList) {
+            console.log(`Movie list with ID: ${listId} not found`);
+            return res.status(404).json({ error: 'Movie list not found' });
+        }
+
+        console.log(`Movie list details:`, movieList);
+        res.status(200).json(movieList);
+    } catch (error) {
+        console.error('Error retrieving movie list details:', error);
+        res.status(500).json({ error: 'Failed to retrieve movie list details' });
+    }
+});
 // app.get('/api/protected', authenticateJWT, (req, res) => {
 //     res.json({ message: 'This is a protected route', user: req.user });
 // });
