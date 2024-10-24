@@ -1,8 +1,20 @@
 <template>
   <div>
-    <input type="text" v-model="query" @input="searchMovies" placeholder="Rechercher un film..." />
+    <input
+      type="text"
+      v-model="query"
+      @input="searchMovies"
+      placeholder="Rechercher un film..."
+    />
     <ul v-if="movies.length">
       <li v-for="movie in movies" :key="movie.id" @click="selectMovie(movie)">
+        <!-- Ajouter l'affiche du film si elle est disponible -->
+        <img
+          v-if="movie.poster_path"
+          :src="getPosterUrl(movie.poster_path)"
+          alt="Affiche du film"
+          class="poster"
+        />
         {{ movie.title }}
       </li>
     </ul>
@@ -36,6 +48,10 @@ export default {
       this.query = '';
       this.movies = [];
     },
+    // Générer l'URL de l'affiche en fonction du poster_path
+    getPosterUrl(posterPath) {
+      return `https://image.tmdb.org/t/p/w200${posterPath}`;
+    },
   },
 };
 </script>
@@ -57,9 +73,18 @@ li {
   cursor: pointer;
   padding: 5px;
   border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
 }
 
 li:hover {
   background-color: #f0f0f0;
+}
+
+/* Style pour les affiches des films */
+.poster {
+  width: 50px;
+  height: auto;
+  margin-right: 10px;
 }
 </style>

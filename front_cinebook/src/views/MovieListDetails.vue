@@ -7,8 +7,11 @@
       <h4>Films</h4>
       <ul>
         <li v-for="item in movieList.items" :key="item.id">
-          {{ item.title }}
-        </li>
+  <img v-if="posterCache[item.tmdbId]" :src="posterCache[item.tmdbId]" alt="Affiche du film" />
+  {{ item.title }}
+  <button @click="removeMovieFromList(item.id)">Retirer</button>
+</li>
+
       </ul>
       <h4>Ajouter un Film</h4>
       <SearchBar @movieSelected="addMovieToList" />
@@ -19,6 +22,7 @@
 
 <script>
 import SearchBar from '@/components/SearchBar.vue';
+import { fetchMovieDetails } from '@/services/tmdbService'; // Importez la fonction fetchMovieDetails
 
 export default {
   props: ['id'],
@@ -28,11 +32,18 @@ export default {
   data() {
     return {
       movieList: null,
+      posterCache: {}, // Cache pour les affiches des films
     };
   },
   async mounted() {
-    await this.loadMovieListDetails();
-  },
+  await this.loadMovieListDetails();
+  
+  if (this.movieList && this.movieList.items) {
+    const posterPromises = this.movieList.items.map(item => this.getPosterUrl(item.tmdbId));
+    await Promise.all(posterPromises);  // Attend que toutes les affiches soient récupérées
+  }
+},
+
   methods: {
     async loadMovieListDetails() {
       const token = localStorage.getItem('token');
@@ -87,10 +98,56 @@ export default {
         console.error('Erreur lors de l\'ajout du film à la liste:', error);
       }
     },
+    async removeMovieFromList(itemId) {
+      const token = localStorage.getItem('token');
+
+      try {
+        const response = await fetch(`http://localhost:3000/api/movie-lists/${this.id}/items/${itemId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          this.movieList.items = this.movieList.items.filter(item => item.id !== itemId);
+        } else {
+          console.error('Erreur lors de la suppression du film de la liste');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la suppression du film de la liste:', error);
+      }
+    },
+    async getPosterUrl(tmdbId) {
+    // Si le poster est déjà en cache, on l'utilise
+    if (this.posterCache[tmdbId]) {
+      return this.posterCache[tmdbId];
+    }
+
+    try {
+      const data = await fetchMovieDetails(tmdbId); // Appel à l'API TMDb
+      const posterUrl = `https://image.tmdb.org/t/p/w200${data.poster_path}`;
+      
+      // On stocke l'URL de l'affiche dans le cache pour éviter les appels répétés
+      this.posterCache[tmdbId] = posterUrl;
+      return posterUrl;
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'affiche du film:', error);
+      return ''; // En cas d'erreur, on retourne une chaîne vide
+    }
+    },
   },
 };
 </script>
 
 <style scoped>
 /* Style pour la page de détails de la liste de films */
+img {
+  width: 100px;
+  height: auto;
+  margin-right: 10px;
+}
+button {
+  margin-left: 10px;
+}
 </style>

@@ -919,6 +919,23 @@ app.get('/api/movie-lists', authenticateJWT, async (req, res) => {
     }
 });
 
+app.delete('/api/movie-lists/:listId/items/:itemId', authenticateJWT, async (req, res) => {
+    const listId = parseInt(req.params.listId);
+    const itemId = parseInt(req.params.itemId);
+    console.log(`Removing movie list item with ID: ${itemId} from list with ID: ${listId}`);
+
+    try {
+        const movieListItem = await prisma.movieListItem.delete({
+            where: { id: itemId },
+        });
+
+        res.status(200).json(movieListItem);
+    } catch (error) {
+        console.error('Error removing movie from list:', error);
+        res.status(500).json({ error: 'Failed to remove movie from list' });
+    }
+});
+
 app.get('/api/movie-lists/:id', authenticateJWT, async (req, res) => {
     const listId = parseInt(req.params.id);
     console.log(`Fetching details for movie list with ID: ${listId}`);
