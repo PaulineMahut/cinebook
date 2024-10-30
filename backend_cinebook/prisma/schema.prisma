@@ -62,6 +62,8 @@ model Notification {
   userId    Int
   senderId  Int
   groupId   Int?
+  listId    Int?
+  message   String?
   type      String
   status    String   @default("pending")
   createdAt DateTime @default(now())
@@ -70,6 +72,7 @@ model Notification {
   user      User     @relation("UserNotifications", fields: [userId], references: [id])
   sender    User     @relation("SenderNotifications", fields: [senderId], references: [id])
   group     Group?   @relation("GroupNotifications", fields: [groupId], references: [id])
+  list      MovieList? @relation("MovieListNotifications", fields: [listId], references: [id])
 }
 
 model Group {
@@ -82,6 +85,7 @@ model Group {
   updatedAt     DateTime          @updatedAt
   members       GroupMembership[] @relation("GroupMembers")
   notifications Notification[]    @relation("GroupNotifications")
+  sharedLists   SharedList[]      @relation("GroupSharedLists")
 }
 
 model GroupMembership {
@@ -99,6 +103,8 @@ model MovieList {
   userId      Int
   user        User            @relation("UserMovieLists", fields: [userId], references: [id])
   items       MovieListItem[]
+  sharedLists SharedList[]
+  notifications Notification[] @relation("MovieListNotifications")
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 }
@@ -111,6 +117,16 @@ model MovieListItem {
   overview    String
   voteAverage Float
   tmdbId      Int
+}
+
+model SharedList {
+  id        Int       @id @default(autoincrement())
+  listId    Int
+  groupId   Int
+  list      MovieList @relation(fields: [listId], references: [id])
+  group     Group     @relation("GroupSharedLists", fields: [groupId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
 }
 
 enum Role {

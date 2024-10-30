@@ -35,7 +35,7 @@ export default {
     <SidebarLink to="/recherche" icon="fas fa-chart-bar">Recherche</SidebarLink>
     <SidebarLink to="/profile" icon="fas fa-users">Profile</SidebarLink>
     <SidebarLink to="/map" icon="fas fa-image">Map</SidebarLink>
-    <SidebarLink to="/notification" icon="fas fa-bell">notificaion</SidebarLink>
+    <SidebarLink to="/notifications" icon="fas fa-bell">notificaion</SidebarLink>
 
     <span
       class="collapse-icon"

@@ -11,7 +11,7 @@ import Profile from '../views/Profile.vue';
 import Recherche from '../views/Recherche.vue';
 import UserProfile from '../components/UserProfile.vue';
 import Friends from '../components/Friends.vue';
-import Notification from '../views/Notifications.vue';
+import Notifications from '../views/Notifications.vue'; // Importez la nouvelle vue
 import GroupForm from '@/components/GroupForm.vue';
 import GroupDetails from '@/views/GroupDetails.vue';
 import MovieListDetails from '@/views/MovieListDetails.vue';
@@ -31,7 +31,7 @@ const routes = [
         component: UserProfile,
     },
     { path: '/friends/:id', name: 'friends', component: Friends },
-    { path: '/notification', name: 'Notification', component: Notification },
+    { path: '/notifications', name: 'Notifications', component: Notifications }, // Ajoutez cette ligne
     {
         path: '/add-group',
         name: 'AddGroup',
@@ -77,7 +77,5 @@ router.beforeEach((to, from, next) => {
         next(); // Passe à la route demandée
     }
 });
-
-
 
 export default router;

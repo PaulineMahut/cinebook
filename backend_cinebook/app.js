@@ -549,9 +549,99 @@ app.get('/api/friends/:userId', authenticateJWT, async (req, res) => {
 
 
 // NOTIFICATIONS
-// Route pour envoyer une notification (demande d'ami ou invitation à un groupe)
+
+// // Route pour envoyer une notification (demande d'ami, invitation à un groupe ou partage de liste)
+// app.post('/api/notifications/send', authenticateJWT, async (req, res) => {
+//     const { recipientId, type, groupId, listId } = req.body; // listId ajouté pour les partages de liste
+//     const senderId = req.user.userId;
+
+//     try {
+//         if (type === 'group_invitation') {
+//             // Si c'est une invitation à un groupe, vérifier que le groupe existe et que l'utilisateur est bien le créateur ou un membre autorisé à inviter
+//             const group = await prisma.group.findUnique({
+//                 where: { id: groupId },
+//             });
+
+//             if (!group) {
+//                 return res.status(404).json({ error: 'Groupe non trouvé' });
+//             }
+
+//             // Vérifier que l'utilisateur a le droit d'envoyer des invitations à ce groupe (créateur ou autre logique que tu veux)
+//             if (group.creatorId !== senderId) {
+//                 return res.status(403).json({ error: 'Non autorisé à inviter des membres dans ce groupe' });
+//             }
+
+//             // Créer la notification d'invitation à un groupe
+//             const notification = await prisma.notification.create({
+//                 data: {
+//                     userId: recipientId,       // L'utilisateur qui reçoit l'invitation
+//                     senderId: senderId,        // L'utilisateur qui envoie l'invitation
+//                     type: 'group_invitation',  // Type de la notification
+//                     groupId: groupId,          // ID du groupe
+//                 },
+//             });
+
+//             return res.status(201).json(notification);
+//         } else if (type === 'list_shared') {
+//             // Si c'est un partage de liste, vérifier que la liste et le groupe existent
+//             const list = await prisma.movieList.findUnique({
+//                 where: { id: listId },
+//             });
+
+//             const group = await prisma.group.findUnique({
+//                 where: { id: groupId },
+//             });
+
+//             if (!list || !group) {
+//                 return res.status(404).json({ error: 'Liste ou groupe non trouvé' });
+//             }
+
+//             // Créer des notifications pour chaque membre du groupe
+//             const groupMembers = await prisma.groupMembership.findMany({
+//                 where: { groupId },
+//                 select: { userId: true },
+//             });
+
+//             const notifications = groupMembers.map(member => ({
+//                 userId: member.userId,
+//                 senderId: senderId,
+//                 type: 'list_shared',
+//                 status: 'unread',
+//                 groupId: groupId,
+//                 listId: listId,
+//             }));
+
+//             await prisma.notification.createMany({
+//                 data: notifications,
+//             });
+
+//             return res.status(201).json({ message: 'Notifications de partage de liste créées' });
+//         }
+
+//         // Créer la notification pour une demande d'ami (si le type n'est pas une invitation de groupe ou un partage de liste)
+//         const notification = await prisma.notification.create({
+//             data: {
+//                 userId: recipientId,         // L'utilisateur qui reçoit la demande
+//                 senderId: senderId,          // L'utilisateur qui envoie la demande
+//                 type: type || 'friend_request', // Type de la notification (par défaut: 'friend_request')
+//                 status: 'pending',           // Assurez-vous que le statut est 'pending'
+//             },
+//         });
+
+//         res.status(201).json(notification);
+//     } catch (error) {
+//         console.error('Erreur lors de l\'envoi de la notification:', error);
+//         res.status(500).json({ error: 'Impossible d\'envoyer la notification' });
+//     }
+// });
+
+
+
+//// TEST SEND
+
+// Route pour envoyer une notification (demande d'ami, invitation à un groupe ou partage de liste)
 app.post('/api/notifications/send', authenticateJWT, async (req, res) => {
-    const { recipientId, type, groupId } = req.body; // groupId ajouté pour les invitations à un groupe
+    const { recipientId, type, groupId, listId } = req.body;
     const senderId = req.user.userId;
 
     try {
@@ -581,14 +671,49 @@ app.post('/api/notifications/send', authenticateJWT, async (req, res) => {
             });
 
             return res.status(201).json(notification);
+        } else if (type === 'list_shared') {
+            // Si c'est un partage de liste, vérifier que la liste et le groupe existent
+            const list = await prisma.movieList.findUnique({
+                where: { id: listId },
+            });
+
+            const group = await prisma.group.findUnique({
+                where: { id: groupId },
+            });
+
+            if (!list || !group) {
+                return res.status(404).json({ error: 'Liste ou groupe non trouvé' });
+            }
+
+            // Créer des notifications pour chaque membre du groupe
+            const groupMembers = await prisma.groupMembership.findMany({
+                where: { groupId },
+                select: { userId: true },
+            });
+
+            const notifications = groupMembers.map(member => ({
+                userId: member.userId,
+                senderId: senderId,
+                type: 'list_shared',
+                status: 'unread',
+                groupId: groupId,
+                listId: listId,
+            }));
+
+            await prisma.notification.createMany({
+                data: notifications,
+            });
+
+            return res.status(201).json({ message: 'Notifications de partage de liste créées' });
         }
 
-        // Créer la notification pour une demande d'ami (si le type n'est pas une invitation de groupe)
+        // Créer la notification pour une demande d'ami (si le type n'est pas une invitation de groupe ou un partage de liste)
         const notification = await prisma.notification.create({
             data: {
                 userId: recipientId,         // L'utilisateur qui reçoit la demande
                 senderId: senderId,          // L'utilisateur qui envoie la demande
                 type: type || 'friend_request', // Type de la notification (par défaut: 'friend_request')
+                status: 'pending',           // Assurez-vous que le statut est 'pending'
             },
         });
 
@@ -599,7 +724,7 @@ app.post('/api/notifications/send', authenticateJWT, async (req, res) => {
     }
 });
 
-
+// Récupérer les notifications de l'utilisateur
 app.get('/api/notifications', authenticateJWT, async (req, res) => {
     const userId = req.user.userId; // Assurez-vous que l'utilisateur est authentifié et que son ID est disponible
 
@@ -607,7 +732,11 @@ app.get('/api/notifications', authenticateJWT, async (req, res) => {
         const notifications = await prisma.notification.findMany({
             where: {
                 userId: userId,
-                status: 'pending',
+                OR: [
+                    { status: 'pending' },
+                    { status: 'unread' },
+                    { status: 'accepted' },
+                ],
             },
             include: {
                 sender: {
@@ -618,6 +747,12 @@ app.get('/api/notifications', authenticateJWT, async (req, res) => {
                     },
                 },
                 group: { // Inclure le groupe dans la notification
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                list: { // Inclure la liste dans la notification
                     select: {
                         id: true,
                         name: true,
@@ -628,87 +763,216 @@ app.get('/api/notifications', authenticateJWT, async (req, res) => {
 
         res.status(200).json(notifications);
     } catch (error) {
-        console.error('Error retrieving notifications:', error);
-        res.status(500).json({ error: 'Failed to retrieve notifications' });
+        console.error('Erreur lors de la récupération des notifications:', error);
+        res.status(500).json({ error: 'Échec de la récupération des notifications' });
     }
 });
 
-
-// Route pour accepter ou refuser une notification (demande d'ami ou invitation à un groupe)
+// Répondre à une notification
 app.post('/api/notifications/respond', authenticateJWT, async (req, res) => {
-    const { notificationId, response } = req.body; // response = 'accepted' ou 'rejected'
+    const { notificationId, response } = req.body;
     const userId = req.user.userId;
 
     try {
         const notification = await prisma.notification.findUnique({
             where: { id: notificationId },
-            include: {
-                sender: {
-                    select: {
-                        id: true,
-                        email: true,
-                        pseudo: true,
-                    },
-                },
-                group: { // Inclure le groupe dans la notification
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-            },
+            include: { sender: true } // Assurez-vous d'inclure le sender pour accéder à senderId
         });
 
-        if (!notification || notification.userId !== userId) {
-            return res.status(404).json({ error: 'Notification non trouvée ou non autorisée' });
+        if (!notification) {
+            return res.status(404).json({ error: 'Notification non trouvée' });
         }
 
-        if (notification.type === 'friend_request' && response === 'accepted') {
-            // Ajouter l'utilisateur comme ami si la demande d'ami est acceptée
-            await prisma.friendship.create({
-                data: {
-                    userId: userId,
-                    friendId: notification.senderId,
-                },
-            });
-
-            await prisma.friendship.create({
-                data: {
-                    userId: notification.senderId,
-                    friendId: userId,
-                },
-            });
-        } else if (notification.type === 'group_invitation') {
-            // Accepter ou refuser une invitation à un groupe
-            if (response === 'accepted') {
-                // Ajouter l'utilisateur au groupe
-                await prisma.groupMembership.create({
-                    data: {
-                        groupId: notification.group.id,  // Le groupe en question
-                        userId: userId,                // L'utilisateur qui accepte l'invitation
+        if (response === 'accepted') {
+            if (notification.type === 'friend_request') {
+                // Vérifiez si la relation d'ami existe déjà
+                const existingFriendship = await prisma.friendship.findFirst({
+                    where: {
+                        OR: [
+                            { userId: userId, friendId: notification.senderId },
+                            { userId: notification.senderId, friendId: userId },
+                        ],
                     },
                 });
+
+                if (!existingFriendship) {
+                    // Créer la relation d'amitié
+                    await prisma.friendship.create({
+                        data: {
+                            userId: userId,
+                            friendId: notification.senderId,
+                        }
+                    });
+                    await prisma.friendship.create({
+                        data: {
+                            userId: notification.senderId,
+                            friendId: userId,
+                        }
+                    });
+                }
+
+                // Récupérer les pseudos des utilisateurs
+                const accepter = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { pseudo: true }
+                });
+
+                const sender = await prisma.user.findUnique({
+                    where: { id: notification.senderId },
+                    select: { pseudo: true }
+                });
+
+                // Créer une notification pour indiquer que les utilisateurs sont désormais amis
+                await prisma.notification.createMany({
+                    data: [
+                        {
+                            userId: notification.senderId,
+                            senderId: userId,
+                            type: 'friend_accepted',
+                            status: 'unread',
+                            message: `Vous êtes maintenant amis avec ${accepter.pseudo}.`
+                        },
+                        {
+                            userId: userId,
+                            senderId: notification.senderId,
+                            type: 'friend_accepted',
+                            status: 'unread',
+                            message: `Vous êtes maintenant amis avec ${sender.pseudo}.`
+                        }
+                    ]
+                });
+
+                // Supprimer la notification de demande d'ami
+                await prisma.notification.delete({
+                    where: { id: notificationId },
+                });
+
+                res.status(200).json({ message: 'Demande d\'ami acceptée', accepter, sender });
+            } else if (notification.type === 'group_invitation') {
+                // Ajouter l'utilisateur dans le groupe
+                await prisma.groupMembership.create({
+                    data: {
+                        groupId: notification.groupId,
+                        userId: userId,
+                    },
+                });
+
+                // Créer une notification pour indiquer que l'utilisateur a rejoint le groupe
+                await prisma.notification.create({
+                    data: {
+                        userId: notification.senderId,
+                        senderId: userId,
+                        type: 'user_joined_group',
+                        status: 'unread',
+                        groupId: notification.groupId,
+                        message: `${notification.sender.pseudo} a rejoint le groupe ${notification.group.name}.`
+                    }
+                });
+
+                // Supprimer la notification d'invitation de groupe
+                await prisma.notification.delete({
+                    where: { id: notificationId },
+                });
+
+                res.status(200).json({ message: 'Invitation au groupe acceptée, membre ajouté au groupe' });
             }
+        } else {
+            // Supprimer la notification de demande d'ami ou d'invitation de groupe rejetée
+            await prisma.notification.delete({
+                where: { id: notificationId },
+            });
 
-            // Optionnel : ajouter une logique pour refuser l'invitation (si besoin)
+            res.status(200).json({ message: 'Notification rejetée' });
         }
-
-        // Mettre à jour le statut de la notification (accepted/rejected)
-        const updatedNotification = await prisma.notification.update({
-            where: { id: notificationId },
-            data: { status: response },
-        });
-
-        console.log('Notification mise à jour:', updatedNotification);
-
-        res.status(200).json({ message: 'Réponse enregistrée' });
     } catch (error) {
         console.error('Erreur lors de la réponse à la notification:', error);
-        res.status(500).json({ error: 'Impossible de répondre à la notification' });
+        res.status(500).json({ error: 'Erreur lors de la réponse à la notification' });
     }
 });
 
 // GROUPS
+
+// Répondre à une invitation de groupe
+app.post('/api/groups/:groupId/invitations/respond', authenticateJWT, async (req, res) => {
+    const { response } = req.body; // "accepted" ou "rejected"
+    const userId = req.user.userId; // ID de l'utilisateur qui répond
+    const groupId = parseInt(req.params.groupId);
+
+    try {
+        // Récupérer la notification d'invitation au groupe
+        const invitation = await prisma.notification.findFirst({
+            where: {
+                userId: userId,
+                groupId: groupId,
+                type: 'group_invitation',
+                status: 'pending',
+            },
+            include: {
+                sender: true,
+                group: true,
+            },
+        });
+
+        if (!invitation) {
+            return res.status(404).json({ error: 'Invitation non trouvée ou déjà traitée' });
+        }
+
+        // Traiter la réponse de l'utilisateur
+        if (response === 'accepted') {
+            // Ajouter l'utilisateur dans le groupe
+            await prisma.groupMembership.create({
+                data: {
+                    groupId: groupId,
+                    userId: userId,
+                },
+            });
+
+            // Créer une notification pour indiquer que l'utilisateur a rejoint le groupe
+            await prisma.notification.create({
+                data: {
+                    userId: userId,
+                    senderId: invitation.senderId,
+                    type: 'user_joined_group',
+                    status: 'unread',
+                    groupId: groupId,
+                    message: `Vous avez rejoint le groupe ${invitation.group.name}.`
+                }
+            });
+
+            // Créer une notification pour indiquer à l'envoyeur que l'utilisateur a accepté l'invitation
+            await prisma.notification.create({
+                data: {
+                    userId: invitation.senderId,
+                    senderId: userId,
+                    type: 'user_joined_group',
+                    status: 'unread',
+                    groupId: groupId,
+                    message: `${invitation.sender.pseudo} a accepté l'invitation à rejoindre le groupe ${invitation.group.name}.`
+                }
+            });
+
+            // Supprimer la notification d'invitation de groupe
+            await prisma.notification.delete({
+                where: { id: invitation.id },
+            });
+
+            res.status(200).json({ message: 'Invitation au groupe acceptée, membre ajouté au groupe' });
+        } else if (response === 'rejected') {
+            // Supprimer la notification d'invitation de groupe rejetée
+            await prisma.notification.delete({
+                where: { id: invitation.id },
+            });
+
+            res.status(200).json({ message: 'Invitation au groupe rejetée' });
+        } else {
+            res.status(400).json({ error: 'Réponse non valide' });
+        }
+    } catch (error) {
+        console.error('Erreur lors de la réponse à l\'invitation de groupe:', error);
+        res.status(500).json({ error: 'Impossible de traiter la réponse' });
+    }
+});
+
 
 app.get('/api/user/groups', authenticateJWT, async (req, res) => {
     const userId = req.user.userId; // Assurez-vous que l'utilisateur est authentifié et que son ID est disponible
@@ -852,7 +1116,6 @@ app.put('/api/groups/:groupId/members', authenticateJWT, async (req, res) => {
 });
 
 
-
 // LISTES
 
 // Endpoint pour créer une liste de films
@@ -958,6 +1221,139 @@ app.get('/api/movie-lists/:id', authenticateJWT, async (req, res) => {
     } catch (error) {
         console.error('Error retrieving movie list details:', error);
         res.status(500).json({ error: 'Failed to retrieve movie list details' });
+    }
+});
+
+// Partager une liste avec un groupe
+app.post('/api/lists/:listId/share', authenticateJWT, async (req, res) => {
+    const listId = parseInt(req.params.listId);
+    const { groupId } = req.body;
+    const userId = req.user.userId;
+
+    if (!groupId) {
+        return res.status(400).json({ error: 'groupId est requis' });
+    }
+
+    try {
+        // Vérifiez si la liste existe et si l'utilisateur est le créateur
+        const list = await prisma.movieList.findUnique({
+            where: { id: listId },
+            include: { user: true },
+        });
+
+        if (!list || list.userId !== userId) {
+            return res.status(403).json({ error: 'Vous n\'êtes pas autorisé à partager cette liste' });
+        }
+
+        // Vérifiez si le groupe existe
+        const group = await prisma.group.findUnique({
+            where: { id: groupId },
+        });
+
+        if (!group) {
+            return res.status(404).json({ error: 'Groupe non trouvé' });
+        }
+
+        // Partager la liste avec le groupe
+        const sharedList = await prisma.sharedList.create({
+            data: {
+                listId,
+                groupId,
+            },
+        });
+
+        // Créer des notifications pour chaque membre du groupe
+        const groupMembers = await prisma.groupMembership.findMany({
+            where: { groupId },
+            select: { userId: true },
+        });
+
+        const notifications = groupMembers.map(member => ({
+            userId: member.userId,
+            senderId: userId,
+            type: 'list_shared',
+            status: 'unread',
+            groupId: groupId,
+            listId: listId,
+        }));
+
+        await prisma.notification.createMany({
+            data: notifications,
+        });
+
+        res.status(201).json(sharedList);
+    } catch (error) {
+        console.error('Erreur lors du partage de la liste:', error);
+        res.status(500).json({ error: 'Impossible de partager la liste' });
+    }
+});
+// Récupérer les listes partagées avec les groupes de l'utilisateur
+app.get('/api/user/shared-lists', authenticateJWT, async (req, res) => {
+    const userId = req.user.userId;
+
+    try {
+        // Récupérer les groupes auxquels l'utilisateur appartient
+        const memberships = await prisma.groupMembership.findMany({
+            where: { userId },
+            select: { groupId: true },
+        });
+
+        const groupIds = memberships.map(membership => membership.groupId);
+
+        // Récupérer les listes partagées avec ces groupes
+        const sharedLists = await prisma.sharedList.findMany({
+            where: { groupId: { in: groupIds } },
+            include: {
+                list: {
+                    include: {
+                        items: true,
+                    },
+                },
+            },
+        });
+
+        res.status(200).json(sharedLists);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des listes partagées:', error);
+        res.status(500).json({ error: 'Impossible de récupérer les listes partagées' });
+    }
+});
+
+// Récupérer les listes partagées avec un groupe
+app.get('/api/groups/:groupId/lists', authenticateJWT, async (req, res) => {
+    const groupId = parseInt(req.params.groupId);
+    const userId = req.user.userId;
+
+    try {
+        // Vérifiez si l'utilisateur est membre du groupe
+        const membership = await prisma.groupMembership.findUnique({
+            where: {
+                userId_groupId: {
+                    userId: userId,
+                    groupId: groupId,
+                },
+            },
+        });
+
+        if (!membership) {
+            return res.status(403).json({ error: 'Vous n\'êtes pas membre de ce groupe' });
+        }
+
+        const sharedLists = await prisma.sharedList.findMany({
+            where: { groupId },
+            include: {
+                list: {
+                    include: {
+                        items: true,
+                    },
+                },
+            },
+        });
+
+        res.status(200).json(sharedLists);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des listes partagées:', error);
+        res.status(500).json({ error: 'Impossible de récupérer les listes partagées' });
     }
 });
 // app.get('/api/protected', authenticateJWT, (req, res) => {
