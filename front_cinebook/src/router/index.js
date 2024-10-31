@@ -15,6 +15,8 @@ import Notifications from '../views/Notifications.vue'; // Importez la nouvelle 
 import GroupForm from '@/components/GroupForm.vue';
 import GroupDetails from '@/views/GroupDetails.vue';
 import MovieListDetails from '@/views/MovieListDetails.vue';
+import CreateVotingSession from '@/views/CreateVotingSession.vue';
+import Vote from '@/views/Vote.vue';
 
 const routes = [
     { path: '/', name: 'Home', component: Home },
@@ -48,6 +50,16 @@ const routes = [
         name: 'MovieListDetails',
         component: MovieListDetails,
         props: true,
+    },
+    {
+        path: '/create-voting-session',
+        name: 'create-voting-session',
+        component: CreateVotingSession,
+      },
+      {
+        path: '/voting-sessions/:sessionId',
+        name: 'vote',
+        component: Vote,
       },
 
 ];

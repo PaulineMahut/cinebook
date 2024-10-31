@@ -23,6 +23,7 @@ model User {
   groupsCreated          Group[]                 @relation("GroupCreator")
   memberships            GroupMembership[]       @relation("UserMembership")
   movieLists             MovieList[]             @relation("UserMovieLists")
+  votes                  Vote[]
 }
 
 model Movie {
@@ -58,21 +59,23 @@ model Friendship {
 }
 
 model Notification {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  senderId  Int
-  groupId   Int?
-  listId    Int?
-  message   String?
-  type      String
-  status    String   @default("pending")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  senderId        Int
+  groupId         Int?
+  listId          Int?
+  votingSessionId Int?     // Ajoutez ce champ
+  message         String?
+  type            String
+  status          String   @default("pending")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  user      User     @relation("UserNotifications", fields: [userId], references: [id])
-  sender    User     @relation("SenderNotifications", fields: [senderId], references: [id])
-  group     Group?   @relation("GroupNotifications", fields: [groupId], references: [id])
-  list      MovieList? @relation("MovieListNotifications", fields: [listId], references: [id])
+  user            User     @relation("UserNotifications", fields: [userId], references: [id])
+  sender          User     @relation("SenderNotifications", fields: [senderId], references: [id])
+  group           Group?   @relation("GroupNotifications", fields: [groupId], references: [id])
+  list            MovieList? @relation("MovieListNotifications", fields: [listId], references: [id])
+  votingSession   VotingSession? @relation(fields: [votingSessionId], references: [id])
 }
 
 model Group {
@@ -104,6 +107,7 @@ model MovieList {
   user        User            @relation("UserMovieLists", fields: [userId], references: [id])
   items       MovieListItem[]
   sharedLists SharedList[]
+  votingSessions VotingSession[]
   notifications Notification[] @relation("MovieListNotifications")
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
@@ -117,6 +121,7 @@ model MovieListItem {
   overview    String
   voteAverage Float
   tmdbId      Int
+  votes       Vote[]
 }
 
 model SharedList {
@@ -127,6 +132,29 @@ model SharedList {
   group     Group     @relation("GroupSharedLists", fields: [groupId], references: [id])
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now())
+}
+
+model VotingSession {
+  id          Int             @id @default(autoincrement())
+  movieListId Int
+  description String
+  endTime     DateTime
+  movieList   MovieList       @relation(fields: [movieListId], references: [id])
+  votes       Vote[]
+  notifications Notification[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Vote {
+  id              Int             @id @default(autoincrement())
+  userId          Int
+  votingSessionId Int
+  movieListItemId Int
+  user            User            @relation(fields: [userId], references: [id])
+  votingSession   VotingSession   @relation(fields: [votingSessionId], references: [id])
+  movieListItem   MovieListItem   @relation(fields: [movieListItemId], references: [id])
+  createdAt       DateTime        @default(now())
 }
 
 enum Role {

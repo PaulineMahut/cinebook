@@ -20,6 +20,8 @@
       <button @click="shareListWithGroup" :disabled="!selectedGroupId">Partager</button>
       <h4>Ajouter un Film</h4>
       <SearchBar @movieSelected="addMovieToList" />
+      <h4>Lancer une session de vote</h4>
+      <button @click="goToCreateVotingSession">Lancer une session de vote</button>
     </div>
     <p v-else>Chargement des détails de la liste de films...</p>
   </div>
@@ -194,6 +196,9 @@ export default {
         console.error('Erreur lors de la récupération de l\'affiche du film:', error);
         return ''; // En cas d'erreur, on retourne une chaîne vide
       }
+    },
+    goToCreateVotingSession() {
+      this.$router.push({ name: 'create-voting-session', query: { movieListId: this.id } });
     },
   },
 };

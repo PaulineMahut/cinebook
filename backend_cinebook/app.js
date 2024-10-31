@@ -15,6 +15,8 @@ app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json());
 
+///////////// INSCRIPTION /////////////
+
 // Endpoint pour l'inscription
 app.post('/api/register', async (req, res) => {
     const { email, password, role = 'USER' } = req.body;
@@ -59,6 +61,9 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ error: 'Login failed' });
     }
 });
+
+
+///////////// FAVORIS /////////////
 
 app.post('/api/movies/add', authenticateJWT, async (req, res) => {
     const { title, overview, voteAverage, tmdbId, genreIds, genres } = req.body; // genres ajoutés
@@ -270,6 +275,9 @@ app.get('/api/movies', authenticateJWT, async (req, res) => {
     }
 });
 
+
+///////////// RECOMMANDATIONS /////////////
+
 // Endpoint pour récuperer les recommandations de films
 app.get('/api/recommendations', authenticateJWT, async (req, res) => {
     const userId = req.user.userId; // Get the userId from the token
@@ -319,6 +327,9 @@ app.get('/api/recommendations', authenticateJWT, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch recommendations' });
     }
 });
+
+
+///////////// UTILISATEURS ///////////
 
 //
 app.get('/api/users', authenticateJWT, async (req, res) => {
@@ -407,7 +418,8 @@ app.get('/api/user/profile/:id', async (req, res) => {
     }
 });
 
-/////// FRIENDS /////////
+
+///////////// FRIENDS /////////////
 
 // Endpoint pour envoyer une demande d'ami
 app.post('/api/friends/add', authenticateJWT, async (req, res) => {
@@ -548,96 +560,7 @@ app.get('/api/friends/:userId', authenticateJWT, async (req, res) => {
 });
 
 
-// NOTIFICATIONS
-
-// // Route pour envoyer une notification (demande d'ami, invitation à un groupe ou partage de liste)
-// app.post('/api/notifications/send', authenticateJWT, async (req, res) => {
-//     const { recipientId, type, groupId, listId } = req.body; // listId ajouté pour les partages de liste
-//     const senderId = req.user.userId;
-
-//     try {
-//         if (type === 'group_invitation') {
-//             // Si c'est une invitation à un groupe, vérifier que le groupe existe et que l'utilisateur est bien le créateur ou un membre autorisé à inviter
-//             const group = await prisma.group.findUnique({
-//                 where: { id: groupId },
-//             });
-
-//             if (!group) {
-//                 return res.status(404).json({ error: 'Groupe non trouvé' });
-//             }
-
-//             // Vérifier que l'utilisateur a le droit d'envoyer des invitations à ce groupe (créateur ou autre logique que tu veux)
-//             if (group.creatorId !== senderId) {
-//                 return res.status(403).json({ error: 'Non autorisé à inviter des membres dans ce groupe' });
-//             }
-
-//             // Créer la notification d'invitation à un groupe
-//             const notification = await prisma.notification.create({
-//                 data: {
-//                     userId: recipientId,       // L'utilisateur qui reçoit l'invitation
-//                     senderId: senderId,        // L'utilisateur qui envoie l'invitation
-//                     type: 'group_invitation',  // Type de la notification
-//                     groupId: groupId,          // ID du groupe
-//                 },
-//             });
-
-//             return res.status(201).json(notification);
-//         } else if (type === 'list_shared') {
-//             // Si c'est un partage de liste, vérifier que la liste et le groupe existent
-//             const list = await prisma.movieList.findUnique({
-//                 where: { id: listId },
-//             });
-
-//             const group = await prisma.group.findUnique({
-//                 where: { id: groupId },
-//             });
-
-//             if (!list || !group) {
-//                 return res.status(404).json({ error: 'Liste ou groupe non trouvé' });
-//             }
-
-//             // Créer des notifications pour chaque membre du groupe
-//             const groupMembers = await prisma.groupMembership.findMany({
-//                 where: { groupId },
-//                 select: { userId: true },
-//             });
-
-//             const notifications = groupMembers.map(member => ({
-//                 userId: member.userId,
-//                 senderId: senderId,
-//                 type: 'list_shared',
-//                 status: 'unread',
-//                 groupId: groupId,
-//                 listId: listId,
-//             }));
-
-//             await prisma.notification.createMany({
-//                 data: notifications,
-//             });
-
-//             return res.status(201).json({ message: 'Notifications de partage de liste créées' });
-//         }
-
-//         // Créer la notification pour une demande d'ami (si le type n'est pas une invitation de groupe ou un partage de liste)
-//         const notification = await prisma.notification.create({
-//             data: {
-//                 userId: recipientId,         // L'utilisateur qui reçoit la demande
-//                 senderId: senderId,          // L'utilisateur qui envoie la demande
-//                 type: type || 'friend_request', // Type de la notification (par défaut: 'friend_request')
-//                 status: 'pending',           // Assurez-vous que le statut est 'pending'
-//             },
-//         });
-
-//         res.status(201).json(notification);
-//     } catch (error) {
-//         console.error('Erreur lors de l\'envoi de la notification:', error);
-//         res.status(500).json({ error: 'Impossible d\'envoyer la notification' });
-//     }
-// });
-
-
-
-//// TEST SEND
+///////////// NOTIFICATIONS /////////////
 
 // Route pour envoyer une notification (demande d'ami, invitation à un groupe ou partage de liste)
 app.post('/api/notifications/send', authenticateJWT, async (req, res) => {
@@ -746,13 +669,13 @@ app.get('/api/notifications', authenticateJWT, async (req, res) => {
                         pseudo: true,
                     },
                 },
-                group: { // Inclure le groupe dans la notification
+                group: {
                     select: {
                         id: true,
                         name: true,
                     },
                 },
-                list: { // Inclure la liste dans la notification
+                list: {
                     select: {
                         id: true,
                         name: true,
@@ -890,7 +813,8 @@ app.post('/api/notifications/respond', authenticateJWT, async (req, res) => {
     }
 });
 
-// GROUPS
+
+///////////// GROUPS /////////////
 
 // Répondre à une invitation de groupe
 app.post('/api/groups/:groupId/invitations/respond', authenticateJWT, async (req, res) => {
@@ -1116,7 +1040,7 @@ app.put('/api/groups/:groupId/members', authenticateJWT, async (req, res) => {
 });
 
 
-// LISTES
+///////////// LISTES /////////////
 
 // Endpoint pour créer une liste de films
 app.post('/api/movie-lists', authenticateJWT, async (req, res) => {
@@ -1287,6 +1211,7 @@ app.post('/api/lists/:listId/share', authenticateJWT, async (req, res) => {
         res.status(500).json({ error: 'Impossible de partager la liste' });
     }
 });
+
 // Récupérer les listes partagées avec les groupes de l'utilisateur
 app.get('/api/user/shared-lists', authenticateJWT, async (req, res) => {
     const userId = req.user.userId;
@@ -1356,6 +1281,196 @@ app.get('/api/groups/:groupId/lists', authenticateJWT, async (req, res) => {
         res.status(500).json({ error: 'Impossible de récupérer les listes partagées' });
     }
 });
+
+
+///////////// VOTES /////////////
+
+// Middleware pour vérifier l'appartenance au groupe
+async function checkGroupMembership(req, res, next) {
+    const userId = req.user.userId;
+    const sessionId = parseInt(req.params.sessionId);
+
+    if (isNaN(sessionId)) {
+        return res.status(400).json({ error: 'Invalid session ID' });
+    }
+
+    try {
+        // Récupérer la session de vote et la liste de films associée
+        const votingSession = await prisma.votingSession.findUnique({
+            where: { id: sessionId },
+            include: {
+                movieList: {
+                    include: {
+                        user: true, // Inclure l'utilisateur qui a créé la liste
+                        items: true,
+                        sharedLists: {
+                            include: {
+                                group: {
+                                    include: {
+                                        members: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                votes: {
+                    include: { user: true, movieListItem: true }
+                }
+            }
+        });
+
+        if (!votingSession) {
+            return res.status(404).json({ error: 'Session de vote non trouvée' });
+        }
+
+        // Vérifier si l'utilisateur fait partie du groupe
+        const isMember = votingSession.movieList.sharedLists.some(sharedList =>
+            sharedList.group.members.some(member => member.userId === userId)
+        );
+
+        if (!isMember) {
+            return res.status(403).json({ error: 'Accès non autorisé' });
+        }
+
+        // Ajouter la session de vote à la requête pour une utilisation ultérieure
+        req.votingSession = votingSession;
+        next();
+    } catch (error) {
+        console.error('Erreur lors de la vérification de l\'appartenance au groupe:', error);
+        res.status(500).json({ error: 'Erreur lors de la vérification de l\'appartenance au groupe' });
+    }
+}
+
+// Créer une nouvelle session de vote
+app.post('/api/voting-sessions', authenticateJWT, async (req, res) => {
+    const { movieListId, description, endTime } = req.body;
+    const userId = req.user.userId;
+
+    try {
+        // Vérifiez si la liste de films existe et appartient à l'utilisateur
+        const movieList = await prisma.movieList.findUnique({
+            where: { id: movieListId },
+            include: {
+                user: true,
+                sharedLists: {
+                    include: {
+                        group: {
+                            include: {
+                                members: {
+                                    include: {
+                                        user: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!movieList || movieList.userId !== userId) {
+            return res.status(404).json({ error: 'Liste de films non trouvée ou accès non autorisé' });
+        }
+
+        // Créer la session de vote
+        const votingSession = await prisma.votingSession.create({
+            data: {
+                movieListId,
+                description,
+                endTime: new Date(endTime),
+            }
+        });
+
+        // Créer des notifications pour chaque membre du groupe
+        const notifications = movieList.sharedLists.flatMap(sharedList =>
+            sharedList.group.members.map(member => ({
+                userId: member.userId,
+                senderId: userId,
+                type: 'voting_session_started',
+                status: 'unread',
+                message: `Un vote a été lancé par ${movieList.user.email}. <a href="/voting-sessions/${votingSession.id}">Voir le vote</a>`,
+                votingSessionId: votingSession.id
+            }))
+        );
+
+        await prisma.notification.createMany({
+            data: notifications
+        });
+
+        res.status(201).json(votingSession);
+    } catch (error) {
+        console.error('Erreur lors de la création de la session de vote:', error);
+        res.status(500).json({ error: 'Erreur lors de la création de la session de vote' });
+    }
+});
+
+// Récupérer les détails d'une session de vote
+app.get('/api/voting-sessions/:sessionId', authenticateJWT, checkGroupMembership, async (req, res) => {
+    try {
+        const votingSession = req.votingSession;
+
+        // Calculer le temps restant
+        const now = new Date();
+        const timeRemaining = Math.max(0, new Date(votingSession.endTime) - now);
+
+        res.status(200).json({ ...votingSession, timeRemaining });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des détails de la session de vote:', error);
+        res.status(500).json({ error: 'Erreur lors de la récupération des détails de la session de vote' });
+    }
+});
+
+// Voter pour un film dans une session de vote
+app.post('/api/voting-sessions/:sessionId/vote', authenticateJWT, checkGroupMembership, async (req, res) => {
+    const sessionId = parseInt(req.params.sessionId);
+    const { movieListItemId } = req.body;
+    const userId = req.user.userId;
+
+    if (isNaN(sessionId)) {
+        return res.status(400).json({ error: 'Invalid session ID' });
+    }
+
+    try {
+        const votingSession = req.votingSession;
+
+        // Vérifiez si le film fait partie de la liste de films de la session de vote
+        const movieListItem = await prisma.movieListItem.findUnique({
+            where: { id: movieListItemId }
+        });
+
+        if (!movieListItem || movieListItem.listId !== votingSession.movieListId) {
+            return res.status(400).json({ error: 'Film non valide pour cette session de vote' });
+        }
+
+        // Vérifiez si l'utilisateur a déjà voté dans cette session de vote
+        const existingVote = await prisma.vote.findFirst({
+            where: {
+                userId,
+                votingSessionId: sessionId
+            }
+        });
+
+        if (existingVote) {
+            return res.status(400).json({ error: 'Vous avez déjà voté dans cette session de vote' });
+        }
+
+        // Créer le vote
+        const vote = await prisma.vote.create({
+            data: {
+                userId,
+                votingSessionId: sessionId,
+                movieListItemId
+            }
+        });
+
+        res.status(201).json(vote);
+    } catch (error) {
+        console.error('Erreur lors du vote:', error);
+        res.status(500).json({ error: 'Erreur lors du vote' });
+    }
+});
+
 // app.get('/api/protected', authenticateJWT, (req, res) => {
 //     res.json({ message: 'This is a protected route', user: req.user });
 // });

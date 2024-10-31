@@ -3,9 +3,7 @@
     <h1>Notifications</h1>
     <ul v-if="notifications.length">
       <li v-for="notification in notifications" :key="notification.id">
-        <p v-if="notification.message">
-          {{ notification.message }}
-        </p>
+        <p v-if="notification.message" v-html="notification.message"></p>
         <p v-else-if="notification.type === 'friend_request' && notification.status === 'pending'">
           {{ notification.sender.pseudo }} vous a envoyé une demande d'ami.
           <button @click="respondToFriendRequest(notification.id, 'accepted')">Accepter</button>
@@ -24,6 +22,9 @@
         </p>
         <p v-else-if="notification.type === 'list_shared'">
           {{ notification.sender.pseudo }} a partagé la liste "{{ notification.list?.name }}" avec le groupe "{{ notification.group?.name }}".
+        </p>
+        <p v-else-if="notification.type === 'voting_session_started'">
+          {{ notification.message }} <router-link :to="'/voting-sessions/' + notification.votingSessionId">Voir le vote</router-link>
         </p>
       </li>
     </ul>
