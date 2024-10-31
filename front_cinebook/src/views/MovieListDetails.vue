@@ -12,16 +12,18 @@
           <button @click="removeMovieFromList(item.id)">Retirer</button>
         </li>
       </ul>
-      <h4>Partager la Liste</h4>
-      <select v-model="selectedGroupId">
-        <option disabled value="">Sélectionnez un groupe</option>
-        <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
-      </select>
-      <button @click="shareListWithGroup" :disabled="!selectedGroupId">Partager</button>
+      <div v-if="isCreator">
+        <h4>Partager la Liste</h4>
+        <select v-model="selectedGroupId">
+          <option disabled value="">Sélectionnez un groupe</option>
+          <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+        </select>
+        <button @click="shareListWithGroup" :disabled="!selectedGroupId">Partager</button>
+        <h4>Lancer une session de vote</h4>
+        <button @click="goToCreateVotingSession">Lancer une session de vote</button>
+      </div>
       <h4>Ajouter un Film</h4>
       <SearchBar @movieSelected="addMovieToList" />
-      <h4>Lancer une session de vote</h4>
-      <button @click="goToCreateVotingSession">Lancer une session de vote</button>
     </div>
     <p v-else>Chargement des détails de la liste de films...</p>
   </div>
@@ -42,6 +44,7 @@ export default {
       posterCache: {}, // Cache pour les affiches des films
       groups: [], // Liste des groupes de l'utilisateur
       selectedGroupId: '', // ID du groupe sélectionné pour le partage
+      isCreator: false, // Indicateur pour savoir si l'utilisateur est le créateur de la liste
     };
   },
   async mounted() {
@@ -69,6 +72,10 @@ export default {
         if (response.ok) {
           this.movieList = await response.json();
           console.log('Movie list details:', this.movieList);
+
+          // Vérifiez si l'utilisateur actuel est le créateur de la liste
+          const userId = JSON.parse(atob(token.split('.')[1])).userId;
+          this.isCreator = this.movieList.user.id === userId;
         } else {
           console.error('Erreur lors de la récupération des détails de la liste de films');
         }

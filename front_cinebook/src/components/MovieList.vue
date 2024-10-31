@@ -2,33 +2,32 @@
   <div>
     <h1>Search Movies</h1>
 
-    <div>
+    <div class="search-bar">
       <input
         v-model="query"
         @keyup.enter="searchMovies"
-        placeholder="Search for movies..."
+        placeholder="Recherchez un film..."
       />
-      <button @click="searchMovies">Search</button>
 
-      <label for="genre-select">Select Genre:</label>
-      <select id="genre-select" v-model="selectedGenreId" @change="filterMovies">
-        <option value="">All Genres</option>
+      <select v-model="selectedGenreId">
+        <option value="">Tous les genres</option> <!-- Valeur par défaut -->
         <option v-for="genre in genres" :key="genre.id" :value="genre.id">
           {{ genre.name }}
         </option>
       </select>
 
-      <label for="year-select">Select Year:</label>
-      <select id="year-select" v-model="selectedYear" @change="filterMovies">
+      <select v-model="selectedYear">
         <option value="">All Years</option>
         <option v-for="year in years" :key="year" :value="year">
           {{ year }}
         </option>
       </select>
+
+      <button @click="searchMovies">Search</button>
     </div>
 
     <div v-if="errorMessage">{{ errorMessage }}</div>
-    
+
     <div v-if="filteredMovies.length">
       <carousel :items-to-show="5">
         <slide v-for="movie in filteredMovies" :key="movie.id">
@@ -51,7 +50,7 @@
 </template>
 
 <script>
-import { fetchMoviesByGenre, fetchMovieGenres, fetchMovies } from '@/services/tmdbService';
+import { fetchMoviesByCriteria, fetchMovieGenres } from '@/services/tmdbService';
 import { Carousel, Navigation, Slide, Pagination } from 'vue3-carousel';
 import defaultImage from '@/assets/imgpardefaut.png';
 
@@ -65,23 +64,18 @@ export default {
   data() {
     return {
       genres: [],
-      selectedGenreId: null,
-      selectedYear: '', // Ajoutez une propriété pour l'année sélectionnée
+      selectedGenreId: '',
+      selectedYear: '',
       query: '',
       movies: [],
       errorMessage: '',
       defaultImage: defaultImage,
-      years: this.generateYears(), // Générer la liste des années
+      years: this.generateYears(),
     };
   },
   computed: {
     filteredMovies() {
-      return this.movies.filter(movie => {
-        const matchesGenre = this.selectedGenreId ? movie.genre_ids.includes(this.selectedGenreId) : true;
-        const matchesQuery = this.query ? movie.title.toLowerCase().includes(this.query.toLowerCase()) : true;
-        const matchesYear = this.selectedYear ? new Date(movie.release_date).getFullYear() === Number(this.selectedYear) : true; // Filtrer par année
-        return matchesGenre && matchesQuery && matchesYear;
-      });
+      return this.movies;
     },
   },
   methods: {
@@ -92,19 +86,14 @@ export default {
         console.error('Failed to fetch genres:', error);
       }
     },
-    
+
     async searchMovies() {
       try {
         this.errorMessage = '';
-        this.movies = await fetchMovies(this.query);
-        this.filterMovies(); // Appliquer le filtre après la recherche
+        this.movies = await fetchMoviesByCriteria(this.selectedGenreId, this.selectedYear, this.query);
       } catch (error) {
         this.errorMessage = error.message;
       }
-    },
-
-    filterMovies() {
-      // Cette méthode n'a plus besoin d'appeler filteredMovies directement car elle est réactive
     },
 
     getPosterUrl(path) {
@@ -113,13 +102,13 @@ export default {
 
     generateYears() {
       const currentYear = new Date().getFullYear();
-      const startYear = 1900; // Définissez l'année de début souhaitée
+      const startYear = 1900;
       const years = [];
       for (let year = currentYear; year >= startYear; year--) {
         years.push(year);
       }
       return years;
-    }
+    },
   },
   mounted() {
     this.loadGenres();
@@ -140,5 +129,18 @@ export default {
 .carousel__prev,
 .carousel__next {
   color: turquoise;
+}
+
+select {
+  background-color: #f0f0f0; /* Couleur de fond gris clair */
+  color: #333; /* Couleur du texte */
+  border: 1px solid #ccc; /* Bordure */
+  padding: 5px; /* Espacement interne */
+  border-radius: 4px; /* Coins arrondis */
+}
+
+select option {
+  background-color: #f0f0f0; /* Couleur de fond gris clair pour les options */
+  color: #333; /* Couleur du texte pour les options */
 }
 </style>

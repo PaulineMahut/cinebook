@@ -51,9 +51,11 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, {
-            expiresIn: '1h',
-        });
+        const token = jwt.sign(
+            { userId: user.id, email: user.email, pseudo: user.pseudo }, // Inclure le pseudo dans le token
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
 
         res.json({ message: 'Login successful', token });
     } catch (error) {
@@ -1123,6 +1125,7 @@ app.delete('/api/movie-lists/:listId/items/:itemId', authenticateJWT, async (req
     }
 });
 
+// Récupérer les détails d'une liste de films
 app.get('/api/movie-lists/:id', authenticateJWT, async (req, res) => {
     const listId = parseInt(req.params.id);
     console.log(`Fetching details for movie list with ID: ${listId}`);
@@ -1131,12 +1134,13 @@ app.get('/api/movie-lists/:id', authenticateJWT, async (req, res) => {
         const movieList = await prisma.movieList.findUnique({
             where: { id: listId },
             include: {
-                items: true, // Inclure les items
+                user: true, // Inclure l'utilisateur qui a créé la liste
+                items: true,
             },
         });
 
         if (!movieList) {
-            console.log(`Movie list with ID: ${listId} not found`);
+            console.error(`Movie list with ID ${listId} not found`);
             return res.status(404).json({ error: 'Movie list not found' });
         }
 
