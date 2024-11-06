@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h2>Popular Movies</h2>
+  <div class="bloc-carrousel">
+    <h2>Films populaires</h2>
     <div v-if="errorMessage">{{ errorMessage }}</div>
     
     <carousel :items-to-show="5" >
@@ -8,11 +8,10 @@
         <router-link :to="{ name: 'MovieDetails', params: { id: movie.id } }">
           <img class="carousel-img" :src="getPosterUrl(movie.poster_path)" :alt="movie.title" />
           <h3>{{ movie.title }}</h3>
-          <p>{{ movie.release_date }}</p>
+          <!-- <p>{{ movie.release_date }}</p> -->
         </router-link>
       </slide>
       <template #addons>
-      <Pagination />
       <Navigation />
     </template>
     </carousel>

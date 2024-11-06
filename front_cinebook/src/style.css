@@ -25,7 +25,6 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -35,34 +34,39 @@ h1 {
   line-height: 1.1;
 }
 
-button {
+.button-action {
   border-radius: 8px;
-  border: 1px solid #5DF6FF !important;
+  border: 1px solid #5DF6FF;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   background-color: rgba(142, 139, 139, 0);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.25s, filter 0.25s; /* Ajout de la transition pour le flou */
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+
+.button-action:hover {
+  color: #ffffff;
+  background-color: #5DF6FF;
 }
 
 .card {
   padding: 2em;
 }
 
+.search-bar{
+background-color: #62686F;
+max-width: 50%;
+padding: 7px;
+border-radius: 20px;
+justify-content: center;
+}
+
 #app {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
 }
 
 @media (prefers-color-scheme: light) {

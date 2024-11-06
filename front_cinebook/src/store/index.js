@@ -1,25 +1,41 @@
 // src/store/index.js
 import { createStore } from 'vuex';
-import { isTokenExpired, logout } from '@/utils/auth'; // Importez la fonction de vérification de token
+import { isTokenExpired, logout } from '@/utils/auth';
 
 const store = createStore({
   state: {
     isAuthenticated: !!localStorage.getItem('token'),
-    userProfile: null, // Ajout du profil utilisateur dans le state
+    userProfile: null,
+    notificationMessage: '',
+    friendCount: 0,
+    movieListCount: 0,
+    groupCount: 0,
   },
   mutations: {
     setAuthentication(state, status) {
       state.isAuthenticated = status;
     },
     setUserProfile(state, profile) {
-      state.userProfile = profile; // Mutation pour mettre à jour le profil utilisateur
+      state.userProfile = profile;
+    },
+    setNotificationMessage(state, message) {
+      state.notificationMessage = message;
+    },
+    setFriendCount(state, count) {
+      state.friendCount = count;
+    },
+    setMovieListCount(state, count) {
+      state.movieListCount = count;
+    },
+    setGroupCount(state, count) {
+      state.groupCount = count;
     },
   },
   actions: {
     checkAuthentication({ commit }) {
       const token = localStorage.getItem('token');
       if (isTokenExpired(token)) {
-        logout(); // Déconnexion automatique
+        logout();
         commit('setAuthentication', false);
       } else {
         commit('setAuthentication', true);
@@ -38,7 +54,10 @@ const store = createStore({
 
           if (response.ok) {
             const userData = await response.json();
-            commit('setUserProfile', userData); // Mettre à jour le store avec les données utilisateur
+            commit('setUserProfile', userData);
+            commit('setFriendCount', userData.friendCount);
+            commit('setMovieListCount', userData.movieListCount);
+            commit('setGroupCount', userData.groupCount);
           } else {
             console.error('Erreur lors de la récupération du profil utilisateur');
           }
@@ -46,6 +65,20 @@ const store = createStore({
           console.error('Erreur lors de la requête API :', error);
         }
       }
+    },
+    login({ commit }, token) {
+      localStorage.setItem('token', token);
+      commit('setAuthentication', true);
+      commit('setNotificationMessage', '');
+      commit('setNotificationMessage', 'Vous êtes connecté');
+    },
+    logout({ commit }) {
+      localStorage.removeItem('token');
+      commit('setAuthentication', false);
+      commit('setNotificationMessage', 'Vous vous êtes déconnecté');
+    },
+    clearNotificationMessage({ commit }) {
+      commit('setNotificationMessage', '');
     },
   },
 });

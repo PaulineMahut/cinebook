@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="bloc-carrousel">
     <!-- Only display the genre's name if randomGenre is not null -->
-    <h2 v-if="randomGenre">Movies from the "{{ randomGenre.name }}" genre</h2>
+    <h2 v-if="randomGenre">Film du genre "{{ randomGenre.name }}"</h2>
     <div v-if="errorMessage">{{ errorMessage }}</div>
 
     <!-- Carousel for movies -->
@@ -10,11 +10,10 @@
         <router-link :to="{ name: 'MovieDetails', params: { id: movie.id } }">
           <img class="carousel-img" :src="getPosterUrl(movie.poster_path)" :alt="movie.title" />
           <h3>{{ movie.title }}</h3>
-          <p>{{ movie.release_date }}</p>
+          <!-- <p>{{ movie.release_date }}</p> -->
         </router-link>
       </slide>
       <template #addons>
-        <Pagination />
         <Navigation />
       </template>
     </carousel>

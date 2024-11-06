@@ -1,9 +1,22 @@
 <template>
-  <div>
+  <div class="profile-container">
     <!-- Vérification si userProfile existe avant d'afficher les informations -->
-    <div v-if="userProfile">
-      <p>Email de l'utilisateur : {{ userProfile.email }}</p>
-      <p>Pseudo de l'utilisateur : {{ userProfile.pseudo }}</p>
+    <div v-if="userProfile" class="profile-card">
+      <h2 class="profile-pseudo">{{ userProfile.pseudo }}</h2>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <h3>Amis</h3>
+          <p>{{ friendCount }}</p>
+        </div>
+        <div class="profile-stat">
+          <h3>Groupes</h3>
+          <p>{{ groupCount }}</p>
+        </div>
+        <div class="profile-stat">
+          <h3>Listes</h3>
+          <p>{{ movieListCount }}</p>
+        </div>
+      </div>
     </div>
     <!-- Optionnel: Message d'erreur ou de chargement si le profil n'est pas encore disponible -->
     <div v-else>
@@ -64,7 +77,7 @@ export default {
   },
   computed: {
     // On mappe l'état de Vuex pour obtenir le profil utilisateur
-    ...mapState(['userProfile']),
+    ...mapState(['userProfile', 'friendCount', 'movieListCount', 'groupCount']),
   },
   async mounted() {
     // Au montage du composant, on déclenche la récupération du profil utilisateur
@@ -75,6 +88,10 @@ export default {
     // Méthode pour aller chercher le profil utilisateur depuis l'API via Vuex
     async fetchUserProfile() {
       await this.$store.dispatch('fetchUserProfile');
+      console.log('Profil utilisateur:', this.userProfile);
+      console.log('Nombre d\'amis:', this.friendCount);
+      console.log('Nombre de listes créées:', this.movieListCount);
+      console.log('Nombre de groupes:', this.groupCount);
     },
     async loadSharedLists() {
       const token = localStorage.getItem('token');
@@ -103,5 +120,48 @@ export default {
 </script>
 
 <style scoped>
-/* Ajoutez vos styles ici */
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px;
+}
+
+.profile-card {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-pseudo {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #343a40;
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: space-around;
+}
+
+.profile-stat {
+  flex: 1;
+  margin: 0 10px;
+}
+
+.profile-stat h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #495057;
+}
+
+.profile-stat p {
+  font-size: 16px;
+  color: #6c757d;
+}
 </style>

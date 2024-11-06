@@ -361,15 +361,22 @@ app.get('/api/users', authenticateJWT, async (req, res) => {
 });
 
 
+// Endpoint pour récupérer le profil utilisateur avec le nombre d'amis, de listes et de groupes
 app.get('/api/user/profile', authenticateJWT, async (req, res) => {
     try {
+        const userId = req.user.userId;
+
+        // Récupérer les informations de l'utilisateur
         const user = await prisma.user.findUnique({
-            where: { id: req.user.userId },
+            where: { id: userId },
             select: {
                 id: true,
                 email: true,
                 pseudo: true,
-                role: true, // Vous pouvez sélectionner les champs dont vous avez besoin
+                role: true,
+                friends: true, // Assurez-vous que cette relation est correcte
+                movieLists: true, // Assurez-vous que cette relation est correcte
+                memberships: true, // Assurez-vous que cette relation est correcte
             },
         });
 
@@ -377,7 +384,18 @@ app.get('/api/user/profile', authenticateJWT, async (req, res) => {
             return res.status(404).json({ error: 'Utilisateur non trouvé' });
         }
 
-        res.status(200).json(user);
+        // Compter le nombre d'amis, de listes et de groupes
+        const friendCount = user.friends.length;
+        const movieListCount = user.movieLists.length;
+        const groupCount = user.memberships.length;
+
+        res.status(200).json({
+            email: user.email,
+            pseudo: user.pseudo,
+            friendCount,
+            movieListCount,
+            groupCount,
+        });
     } catch (error) {
         console.error('Erreur lors de la récupération du profil utilisateur:', error);
         res.status(500).json({ error: 'Erreur lors de la récupération du profil utilisateur' });

@@ -24,10 +24,10 @@ export default {
   <div class="sidebar" :style="{ width: sidebarWidth }">
     <h1>
       <span v-if="collapsed">
-        <div>V</div>
-        <div>S</div>
+        <div><img class="logo" src="@/assets/logo_traitsclair.png" alt=""></div>
+        <div></div>
       </span>
-      <span v-else>Vue Sidebar</span>
+      <span v-else><img class="logo" src="@/assets/logo_traitsclair.png" alt=""></span>
     </h1>
 
     <SidebarLink to="/" icon="fas fa-home">Home</SidebarLink>
@@ -35,7 +35,7 @@ export default {
     <SidebarLink to="/recherche" icon="fas fa-chart-bar">Recherche</SidebarLink>
     <SidebarLink to="/profile" icon="fas fa-users">Profile</SidebarLink>
     <SidebarLink to="/map" icon="fas fa-image">Map</SidebarLink>
-    <SidebarLink to="/notifications" icon="fas fa-bell">notificaion</SidebarLink>
+    <SidebarLink to="/notifications" icon="fas fa-bell">Notificaion</SidebarLink>
 
     <span
       class="collapse-icon"
@@ -49,9 +49,9 @@ export default {
 
 <style>
 :root {
-  --sidebar-bg-color: #2f855a;
-  --sidebar-item-hover: #38a169;
-  --sidebar-item-active: #276749;
+  --sidebar-bg-color: #03081B;
+  --sidebar-item-hover: #62686F;
+  --sidebar-item-active: #62686F;
 }
 </style>
 
@@ -91,5 +91,11 @@ export default {
 .rotate-180 {
   transform: rotate(180deg);
   transition: 0.2s linear;
+}
+
+.logo {
+  width: 50%;
+  border-radius: 50%;
+  margin-right: 10px;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h1>Recommended Movies</h1>
+  <div class="bloc-carrousel">
+    <h2>Recommandés pour vous</h2>
     <div v-if="recommendedMovies.length > 0">
       <carousel :items-to-show="5">
         <slide v-for="movie in recommendedMovies" :key="movie.id">
@@ -13,7 +13,6 @@
           </div>
         </slide>
         <template #addons>
-          <Pagination />
           <Navigation />
         </template>
       </carousel>

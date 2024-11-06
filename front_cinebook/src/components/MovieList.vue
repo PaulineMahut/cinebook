@@ -1,6 +1,8 @@
 <template>
-  <div>
-    <h1>Search Movies</h1>
+  <div class="bloc-searchbar">
+    <h3></h3>
+
+    <div>
 
     <div class="search-bar">
       <input
@@ -10,21 +12,23 @@
       />
 
       <select v-model="selectedGenreId">
-        <option value="">Tous les genres</option> <!-- Valeur par défaut -->
+        <option value="">Genres</option> <!-- Valeur par défaut -->
         <option v-for="genre in genres" :key="genre.id" :value="genre.id">
           {{ genre.name }}
         </option>
       </select>
 
       <select v-model="selectedYear">
-        <option value="">All Years</option>
+        <option value="">Années</option>
         <option v-for="year in years" :key="year" :value="year">
           {{ year }}
         </option>
       </select>
 
-      <button @click="searchMovies">Search</button>
+      <button @click="searchMovies"><i class="fas fa-search"></i></button>
     </div>
+
+  </div>
 
     <div v-if="errorMessage">{{ errorMessage }}</div>
 
@@ -132,13 +136,25 @@ export default {
 }
 
 select {
-  background-color: #f0f0f0; /* Couleur de fond gris clair */
-  color: #333; /* Couleur du texte */
+  background-color: #f0f0f000; /* Couleur de fond gris clair */
+  color: #ffffff; /* Couleur du texte */
   border: 1px solid #ccc; /* Bordure */
   padding: 5px; /* Espacement interne */
   border-radius: 4px; /* Coins arrondis */
+  border: none;
+  outline: none; /* Supprimer la bordure active */
+
 }
 
+/* .bloc-searchbar {
+  justify-content: space-around;
+  display: grid;
+} */
+
+.search-bar input{
+  outline: none; /* Supprimer la bordure active */
+
+}
 select option {
   background-color: #f0f0f0; /* Couleur de fond gris clair pour les options */
   color: #333; /* Couleur du texte pour les options */

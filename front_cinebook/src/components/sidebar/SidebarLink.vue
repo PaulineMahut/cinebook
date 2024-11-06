@@ -47,7 +47,7 @@ export default {
   font-weight: 400;
   user-select: none;
 
-  margin: 0.1em 0;
+  margin: 0.7em 0;
   padding: 0.4em;
   border-radius: 0.25em;
   height: 1.5em;

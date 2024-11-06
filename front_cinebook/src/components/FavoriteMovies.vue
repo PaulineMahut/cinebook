@@ -1,12 +1,12 @@
 <template>
-    <div>
+    <div class="bloc-carrousel">
         <h2>Liste des Films Favoris</h2>
         <div v-if="movies.length" class="movies-grid">
             <div v-for="movie in movies" :key="movie.tmdbId" class="movie-item">
                 <router-link :to="{ name: 'MovieDetails', params: { id: movie.tmdbId } }">
                     <img v-if="movie.poster_path" :src="getPosterUrl(movie.poster_path)" alt="Movie Poster" />
                     <h3>{{ movie.title }}</h3>
-                    <p>{{ movie.release_date }}</p>
+                    <!-- <p>{{ movie.release_date }}</p> -->
                 </router-link>
             </div>
         </div>

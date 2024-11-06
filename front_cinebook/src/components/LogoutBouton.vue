@@ -1,14 +1,21 @@
 <template>
-    <button @click="logout">Logout</button>
-  </template>
-  
-  <script>
-  export default {
-    methods: {
-      logout() {
-        localStorage.removeItem('token');
-        this.$router.push({ path: '/login' });
-      },
+  <button @click="handleLogout">Logout</button>
+</template>
+
+<script>
+import { mapActions } from 'vuex';
+
+export default {
+  methods: {
+    ...mapActions(['logout']),
+    handleLogout() {
+      this.logout();
+      this.$router.push('/login');
     },
-  };
-  </script>
+  },
+};
+</script>
+
+<style scoped>
+/* Ajoute ici tes styles */
+</style>
