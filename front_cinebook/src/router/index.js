@@ -17,6 +17,8 @@ import GroupDetails from '@/views/GroupDetails.vue';
 import MovieListDetails from '@/views/MovieListDetails.vue';
 import CreateVotingSession from '@/views/CreateVotingSession.vue';
 import Vote from '@/views/Vote.vue';
+import Settings from '@/views/Settings.vue'; // Importez la nouvelle vue
+import CreateMovieList from '../components/CreateMovieList.vue';
 
 const routes = [
     { path: '/', name: 'Home', component: Home },
@@ -40,6 +42,11 @@ const routes = [
         component: GroupForm,
     },
     {
+        path: '/add-list',
+        name: 'AddList',
+        component: CreateMovieList,
+    },
+    {
         path: '/group/:id',
         name: 'GroupDetails',
         component: GroupDetails,
@@ -60,6 +67,11 @@ const routes = [
         path: '/voting-sessions/:sessionId',
         name: 'vote',
         component: Vote,
+    },
+    {
+        path: '/settings',
+        name: 'Settings',
+        component: Settings, // Ajoutez la route pour Settings
       },
 
 ];

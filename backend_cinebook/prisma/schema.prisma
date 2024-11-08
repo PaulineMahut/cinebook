@@ -12,6 +12,7 @@ model User {
   email                  String                  @unique
   password               String
   pseudo                 String?
+  profilePicture String?
   role                   Role                    @default(USER)
   userMovies             UserMovie[]
   friends                Friendship[]            @relation("UserFriends")

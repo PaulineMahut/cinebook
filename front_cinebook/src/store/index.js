@@ -66,6 +66,28 @@ const store = createStore({
         }
       }
     },
+    async updateUserProfile({ commit }, formData) {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch('http://localhost:3000/api/user/profile', {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (response.ok) {
+          const updatedUser = await response.json();
+          commit('setUserProfile', updatedUser);
+          commit('setNotificationMessage', 'Profil mis à jour avec succès');
+        } else {
+          console.error('Erreur lors de la mise à jour du profil utilisateur');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la requête API :', error);
+      }
+    },
     login({ commit }, token) {
       localStorage.setItem('token', token);
       commit('setAuthentication', true);

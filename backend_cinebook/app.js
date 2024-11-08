@@ -6,6 +6,11 @@ import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import authenticateJWT from './middleware/auth.js';
 import dotenv from 'dotenv';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
 dotenv.config();
 
 const app = express();
@@ -14,6 +19,29 @@ const prisma = new PrismaClient(); // Gardez une seule instance
 app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json());
+
+// Configuration de multer pour gérer les fichiers
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = 'uploads/';
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath);
+      }
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      cb(null, `${Date.now()}-${file.originalname}`);
+    },
+  });
+  
+  const upload = multer({ storage });
+
+// Utiliser import.meta.url pour obtenir le répertoire actuel
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Assurez-vous que le dossier 'uploads' est accessible publiquement
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 ///////////// INSCRIPTION /////////////
 
@@ -364,43 +392,75 @@ app.get('/api/users', authenticateJWT, async (req, res) => {
 // Endpoint pour récupérer le profil utilisateur avec le nombre d'amis, de listes et de groupes
 app.get('/api/user/profile', authenticateJWT, async (req, res) => {
     try {
-        const userId = req.user.userId;
-
-        // Récupérer les informations de l'utilisateur
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-                id: true,
-                email: true,
-                pseudo: true,
-                role: true,
-                friends: true, // Assurez-vous que cette relation est correcte
-                movieLists: true, // Assurez-vous que cette relation est correcte
-                memberships: true, // Assurez-vous que cette relation est correcte
-            },
-        });
-
-        if (!user) {
-            return res.status(404).json({ error: 'Utilisateur non trouvé' });
-        }
-
-        // Compter le nombre d'amis, de listes et de groupes
-        const friendCount = user.friends.length;
-        const movieListCount = user.movieLists.length;
-        const groupCount = user.memberships.length;
-
-        res.status(200).json({
-            email: user.email,
-            pseudo: user.pseudo,
-            friendCount,
-            movieListCount,
-            groupCount,
-        });
+      const userId = req.user.userId;
+  
+      // Récupérer les informations de l'utilisateur
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          pseudo: true,
+          role: true,
+          profilePicture: true,
+          friends: true,
+          movieLists: true,
+          memberships: true,
+        },
+      });
+  
+      if (!user) {
+        return res.status(404).json({ error: 'Utilisateur non trouvé' });
+      }
+  
+      // Compter le nombre d'amis, de listes et de groupes
+      const friendCount = user.friends.length;
+      const movieListCount = user.movieLists.length;
+      const groupCount = user.memberships.length;
+  
+      res.status(200).json({
+        email: user.email,
+        pseudo: user.pseudo,
+        profilePicture: user.profilePicture,
+        friendCount,
+        movieListCount,
+        groupCount,
+      });
     } catch (error) {
-        console.error('Erreur lors de la récupération du profil utilisateur:', error);
-        res.status(500).json({ error: 'Erreur lors de la récupération du profil utilisateur' });
+      console.error('Erreur lors de la récupération du profil utilisateur:', error);
+      res.status(500).json({ error: 'Erreur lors de la récupération du profil utilisateur' });
     }
-});
+  });
+
+// Endpoint pour mettre à jour le profil utilisateur
+app.put('/api/user/profile', authenticateJWT, upload.single('profilePicture'), async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const { pseudo, email } = req.body;
+      let profilePicture = null;
+  
+      if (req.file) {
+        profilePicture = `/uploads/${req.file.filename}`;
+      }
+  
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          pseudo,
+          email,
+          profilePicture,
+        },
+      });
+  
+      console.log('Profil utilisateur mis à jour:', updatedUser);
+  
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil utilisateur:', error);
+      res.status(500).json({ error: 'Erreur lors de la mise à jour du profil utilisateur' });
+    }
+  });
+  
 
 // Endpoint pour récupérer le profil utilisateur avec le nombre d'amis
 app.get('/api/user/profile/:id', async (req, res) => {

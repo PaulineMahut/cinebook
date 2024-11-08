@@ -2,6 +2,7 @@
   <div class="profile-container">
     <!-- Vérification si userProfile existe avant d'afficher les informations -->
     <div v-if="userProfile" class="profile-card">
+      <img v-if="userProfile.profilePicture" :src="getProfilePictureUrl(userProfile.profilePicture)" alt="Photo de profil" class="profile-picture" />
       <h2 class="profile-pseudo">{{ userProfile.pseudo }}</h2>
       <div class="profile-stats">
         <div class="profile-stat">
@@ -29,19 +30,17 @@
   </div>
 
   <div>
-    GROUPES
+    <UserGroups />
     <router-link to="/add-group">
       <button>Ajouter un Groupe</button>
     </router-link>
-    <UserGroups />
-  </div>
-
-  <div>
-    <CreateMovieList />
   </div>
 
   <div>
     <UserMovieList />
+    <router-link to="/add-list">
+      <button>Ajouter une liste</button>
+    </router-link>
   </div>
 
   <div>
@@ -79,16 +78,12 @@ export default {
     // On mappe l'état de Vuex pour obtenir le profil utilisateur
     ...mapState(['userProfile', 'friendCount', 'movieListCount', 'groupCount']),
   },
-  async mounted() {
-    // Au montage du composant, on déclenche la récupération du profil utilisateur
-    await this.fetchUserProfile();
-    await this.loadSharedLists();
-  },
   methods: {
     // Méthode pour aller chercher le profil utilisateur depuis l'API via Vuex
     async fetchUserProfile() {
       await this.$store.dispatch('fetchUserProfile');
       console.log('Profil utilisateur:', this.userProfile);
+      console.log('URL de la photo de profil:', this.userProfile.profilePicture);
       console.log('Nombre d\'amis:', this.friendCount);
       console.log('Nombre de listes créées:', this.movieListCount);
       console.log('Nombre de groupes:', this.groupCount);
@@ -115,6 +110,16 @@ export default {
         console.error('Erreur de récupération des listes partagées:', error);
       }
     },
+    getProfilePictureUrl(path) {
+      const url = `http://localhost:3000${path}`;
+      console.log('URL complète de la photo de profil:', url);
+      return url;
+    },
+  },
+  async mounted() {
+    // Au montage du composant, on déclenche la récupération du profil utilisateur
+    await this.fetchUserProfile();
+    await this.loadSharedLists();
   },
 };
 </script>
@@ -136,6 +141,14 @@ export default {
   max-width: 600px;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-picture {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 20px;
 }
 
 .profile-pseudo {

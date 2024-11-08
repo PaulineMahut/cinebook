@@ -36,6 +36,7 @@ export default {
     <SidebarLink to="/profile" icon="fas fa-users">Profile</SidebarLink>
     <SidebarLink to="/map" icon="fas fa-image">Map</SidebarLink>
     <SidebarLink to="/notifications" icon="fas fa-bell">Notificaion</SidebarLink>
+    <SidebarLink to="/settings" icon="fas fa-bell">Paramètres</SidebarLink>
 
     <span
       class="collapse-icon"
