@@ -1012,43 +1012,55 @@ app.get('/api/user/groups', authenticateJWT, async (req, res) => {
     }
 });
 
-app.post('/api/groups', authenticateJWT, async (req, res) => {
+// Endpoint pour créer un groupe avec une photo de couverture
+app.post('/api/groups', authenticateJWT, upload.single('coverPhoto'), async (req, res) => {
     const { name, description, members } = req.body;
     const creatorId = req.user.userId; // Assurez-vous que l'utilisateur est authentifié et que son ID est disponible
-
-    try {
-        const group = await prisma.group.create({
-            data: {
-                name,
-                description,
-                creatorId,
-                members: {
-                    create: {
-                        userId: creatorId, // Ajouter le créateur en tant que membre du groupe
-                    },
-                },
-            },
-        });
-
-        // Créez une notification pour chaque membre sélectionné
-        const notifications = members.map(memberId => ({
-            userId: memberId,
-            senderId: creatorId,
-            type: 'group_invitation',
-            status: 'pending',
-            groupId: group.id, // Utilisez l'ID du groupe nouvellement créé
-        }));
-
-        await prisma.notification.createMany({
-            data: notifications,
-        });
-
-        res.status(201).json(group);
-    } catch (error) {
-        console.error('Error creating group:', error);
-        res.status(500).json({ error: 'Failed to create group' });
+    let coverPhoto = null;
+  
+    if (req.file) {
+      coverPhoto = `/uploads/${req.file.filename}`;
+      console.log('Fichier reçu:', req.file);
+    } else {
+      console.log('Aucun fichier reçu');
     }
-});
+  
+    try {
+      const parsedMembers = JSON.parse(members); // Analysez les membres en tant que tableau JSON
+  
+      const group = await prisma.group.create({
+        data: {
+          name,
+          description,
+          creatorId,
+          coverPhoto,
+          members: {
+            create: {
+              userId: creatorId, // Ajouter le créateur en tant que membre du groupe
+            },
+          },
+        },
+      });
+  
+      // Créez une notification pour chaque membre sélectionné
+      const notifications = parsedMembers.map(memberId => ({
+        userId: memberId,
+        senderId: creatorId,
+        type: 'group_invitation',
+        status: 'pending',
+        groupId: group.id, // Utilisez l'ID du groupe nouvellement créé
+      }));
+  
+      await prisma.notification.createMany({
+        data: notifications,
+      });
+  
+      res.status(201).json(group);
+    } catch (error) {
+      console.error('Error creating group:', error);
+      res.status(500).json({ error: 'Failed to create group' });
+    }
+  });
 
 app.get('/api/groups/:id', authenticateJWT, async (req, res) => {
     const groupId = parseInt(req.params.id);

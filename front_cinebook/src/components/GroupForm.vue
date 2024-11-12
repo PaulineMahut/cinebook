@@ -2,15 +2,19 @@
   <div id="create-group">
     <h2>Créer un Groupe</h2>
     <form @submit.prevent="createGroup">
-      <div>
+      <div class="form-group">
         <label for="name">Nom du Groupe:</label>
         <input type="text" v-model="group.name" required />
       </div>
-      <div>
+      <div class="form-group">
         <label for="description">Description:</label>
         <textarea v-model="group.description" required></textarea>
       </div>
-      <div>
+      <div class="form-group">
+        <label for="coverPhoto">Photo de Couverture:</label>
+        <input type="file" @change="onFileChange" />
+      </div>
+      <div class="form-group">
         <label>Membres:</label>
         <ul>
           <li v-for="friend in friends" :key="friend.id">
@@ -20,7 +24,7 @@
         </ul>
         <p v-if="!friends.length">Aucun ami trouvé.</p>
       </div>
-      <button type="submit">Créer le Groupe</button>
+      <button type="submit" class="btn-submit">Créer le Groupe</button>
     </form>
   </div>
 </template>
@@ -34,6 +38,7 @@ export default {
         name: '',
         description: '',
       },
+      coverPhoto: null,
       friends: [], // Liste des amis récupérés
       selectedMembers: [], // Membres sélectionnés à ajouter au groupe
     };
@@ -66,21 +71,26 @@ export default {
         alert(`Failed to fetch friends: ${error.message}`); // Alerte l'utilisateur
       }
     },
+    onFileChange(event) {
+      this.coverPhoto = event.target.files[0]; // Ajoutez cette ligne
+    },
     async createGroup() {
       const token = localStorage.getItem('token'); // Récupérer le token d'authentification
+      const formData = new FormData();
+      formData.append('name', this.group.name);
+      formData.append('description', this.group.description);
+      formData.append('members', JSON.stringify(this.selectedMembers));
+      if (this.coverPhoto) {
+        formData.append('coverPhoto', this.coverPhoto); // Ajoutez cette ligne
+      }
 
       try {
         const response = await fetch('http://localhost:3000/api/groups', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            name: this.group.name,
-            description: this.group.description,
-            members: this.selectedMembers, // Passer les membres sélectionnés
-          }),
+          body: formData,
         });
 
         if (!response.ok) {
@@ -95,6 +105,7 @@ export default {
         this.group.name = '';
         this.group.description = '';
         this.selectedMembers = [];
+        this.coverPhoto = null;
       } catch (error) {
         console.error('Erreur lors de la création du groupe:', error);
         alert(`Failed to create group: ${error.message}`); // Alerte l'utilisateur
@@ -109,6 +120,15 @@ export default {
 #create-group {
   max-width: 600px;
   margin: auto;
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  color: #343a40;
 }
 
 form {
@@ -116,11 +136,48 @@ form {
   flex-direction: column;
 }
 
-label {
-  margin-top: 10px;
+.form-group {
+  margin-bottom: 15px;
 }
 
-button {
-  margin-top: 20px;
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+  color: #495057;
+}
+
+input[type="text"],
+textarea,
+input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  margin-bottom: 10px;
+}
+
+.btn-submit {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  text-align: center;
+}
+
+.btn-submit:hover {
+  background-color: #0056b3;
 }
 </style>

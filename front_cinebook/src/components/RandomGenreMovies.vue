@@ -1,5 +1,5 @@
 <template>
-  <div class="bloc-carrousel">
+  <div class="carrousel-random">
     <!-- Only display the genre's name if randomGenre is not null -->
     <h2 v-if="randomGenre">Film du genre "{{ randomGenre.name }}"</h2>
     <div v-if="errorMessage">{{ errorMessage }}</div>
@@ -63,3 +63,10 @@ export default {
   },
 };
 </script>
+
+<style>
+
+.carrousel-random .carousel__slide {
+  margin-right: 15px;}
+  
+</style>

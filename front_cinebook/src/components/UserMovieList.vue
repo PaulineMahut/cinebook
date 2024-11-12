@@ -1,64 +1,155 @@
 <template>
-    <div>
-      <h2>Mes Listes de Films</h2>
-      <ul v-if="movieLists.length">
-        <li v-for="list in movieLists" :key="list.id">
-          <router-link :to="{ name: 'MovieListDetails', params: { id: list.id } }">{{ list.name }}</router-link>
-        </li>
-      </ul>
-      <p v-else>Vous n'avez créé aucune liste de films.</p>
+  <div class="movie-lists-container">
+    <h2>Mes Listes de Films</h2>
+    <div v-if="movieLists.length">
+      <carousel :items-to-show="4" :navigation-enabled="true">
+        <!-- Carte spéciale pour créer une nouvelle liste de films -->
+        <slide
+          v-for="list in movieLists"
+          :key="list.id"
+          :class="{'special-card': list.isAddButton}"
+        >
+          <router-link
+            v-if="list.isAddButton"
+            to="/add-list"
+          >
+            <div class="movie-list-card special-card">
+              <button class="add-button">+</button>
+            </div>
+          </router-link>
+          <router-link
+            v-else
+            :to="{ name: 'MovieListDetails', params: { id: list.id } }"
+          >
+            <div class="movie-list-card">
+              <img
+                v-if="list.coverPhoto"
+                :src="getCoverPhotoUrl(list.coverPhoto)"
+                alt="Photo de couverture"
+                class="cover-photo"
+              />
+              <h3 class="list-name">{{ list.name }}</h3>
+            </div>
+          </router-link>
+        </slide>
+        <template #addons>
+          <Navigation />
+        </template>
+      </carousel>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    data() {
-      return {
-        movieLists: [],
-      };
-    },
-    async mounted() {
-      await this.loadMovieLists();
-    },
-    methods: {
-      async loadMovieLists() {
-        const token = localStorage.getItem('token');
-  
-        try {
-          const response = await fetch('http://localhost:3000/api/movie-lists', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-  
-          if (response.ok) {
-            this.movieLists = await response.json();
-          } else {
-            console.error('Erreur lors de la récupération des listes de films');
-          }
-        } catch (error) {
-          console.error('Erreur de récupération des listes de films:', error);
+    <p v-else>Vous n'avez créé aucune liste de films.</p>
+  </div>
+</template>
+
+
+<script>
+import { Carousel, Slide, Navigation } from 'vue3-carousel';
+import 'vue3-carousel/dist/carousel.css';
+
+export default {
+  name: 'UserMovieLists',
+  components: {
+    Carousel,
+    Slide,
+    Navigation,
+  },
+  data() {
+    return {
+      movieLists: [],
+    };
+  },
+  async mounted() {
+    await this.fetchMovieLists();
+  },
+  methods: {
+    async fetchMovieLists() {
+      const token = localStorage.getItem('token');
+
+      try {
+        const response = await fetch('http://localhost:3000/api/movie-lists', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Erreur lors de la récupération des listes de films:', errorData);
+          throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
         }
-      },
+
+        const listsData = await response.json();
+
+        // Ajoute une carte fictive pour l'option d'ajout
+        this.movieLists = [
+          { id: 'add-new', name: 'Ajouter une liste', isAddButton: true },
+          ...listsData,
+        ];
+      } catch (error) {
+        console.error('Erreur de récupération des listes de films:', error);
+        alert(`Failed to fetch movie lists: ${error.message}`);
+      }
     },
-  };
-  </script>
-  
-  <style scoped>
-  /* Style pour la liste des listes de films */
-  ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  li {
-    margin: 5px 0;
-  }
-  
-  a {
-    cursor: pointer;
-    color: blue;
-    text-decoration: underline;
-  }
-  </style>
+    getCoverPhotoUrl(path) {
+      return `http://localhost:3000${path}`;
+    },
+  },
+};
+</script>
+
+
+<style scoped>
+.movie-lists-container {
+  margin: 20px;
+}
+
+/* .carousel__slide {
+  margin-right: 15px;
+} */
+
+.movie-list-card {
+  width: 200px;
+  height: 300px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 0 10px;
+}
+
+.add-button {
+  font-size: 48px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cover-photo {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.list-name {
+  font-size: 18px;
+  color: #343a40;
+  text-align: center;
+  margin-top: auto;
+}
+</style>

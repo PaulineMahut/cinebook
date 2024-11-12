@@ -1,5 +1,5 @@
 <template>
-  <div class="bloc-carrousel">
+  <div class="carrousel-recom">
     <h2>Recommandés pour vous</h2>
     <div v-if="recommendedMovies.length > 0">
       <carousel :items-to-show="5">
@@ -98,7 +98,7 @@
     height: auto; /* Maintient le rapport d'aspect des images */
   }
   
-  .carousel__slide {
+  .carrousel-recom .carousel__slide {
     margin-right: 15px;
   }
   

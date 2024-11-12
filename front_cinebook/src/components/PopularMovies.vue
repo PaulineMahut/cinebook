@@ -1,5 +1,5 @@
 <template>
-  <div class="bloc-carrousel">
+  <div class="carrousel-favoris">
     <h2>Films populaires</h2>
     <div v-if="errorMessage">{{ errorMessage }}</div>
     
@@ -66,10 +66,10 @@ export default {
 
 }
 
-.carousel__slide {
+.carrousel-favoris .carousel__slide {
   margin-right: 15px;
 }
-.carousel__prev, .carousel__next {
+.carrousel-favoris .carousel__prev, .carousel__next {
   color: turquoise;
 }
 </style>

@@ -1,6 +1,5 @@
 <template>
   <div>
-    <LogoutBouton />
     <div>
       <h3>Hello {{ userName }}! 👋</h3>
       <h5>Quoi de prévu aujourd'hui ?</h5>
@@ -21,7 +20,6 @@
 
 <script>
 import { mapState, mapActions } from 'vuex';
-import LogoutBouton from '@/components/LogoutBouton.vue';
 import MovieList from '@/components/MovieList.vue';
 import PopularMovies from '@/components/PopularMovies.vue';
 import FavoriteMovies from '@/components/FavoriteMovies.vue'; // Import du composant
@@ -33,7 +31,6 @@ import RecommendedMovies from '../components/RecommendedMovies.vue';
 export default {
   name: 'Dashboard',
   components: {
-    LogoutBouton,
     MovieList,
     PopularMovies,
     FavoriteMovies,

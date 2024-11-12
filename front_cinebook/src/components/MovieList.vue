@@ -135,21 +135,22 @@ export default {
   color: turquoise;
 }
 
-select {
-  background-color: #f0f0f000; /* Couleur de fond gris clair */
+.search-bar select {
+  /* background-color: rgba(3, 8, 27, 0.3); */
   color: #ffffff; /* Couleur du texte */
   border: 1px solid #ccc; /* Bordure */
-  padding: 5px; /* Espacement interne */
+  padding: 5px 15px 5px 15px; /* Espacement interne */
   border-radius: 4px; /* Coins arrondis */
   border: none;
   outline: none; /* Supprimer la bordure active */
 
 }
 
-/* .bloc-searchbar {
+.search-bar {
+  padding: 5px 15px 5px 15px; /* Espacement interne */
   justify-content: space-around;
-  display: grid;
-} */
+  display: flex;
+}
 
 .search-bar input{
   outline: none; /* Supprimer la bordure active */

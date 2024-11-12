@@ -1,15 +1,22 @@
 <template>
-  <div id="app">
-    <Sidebar v-if="isAuthenticated" />
+  <div>
+    <TopNavbar />
+
+
+  </div>
+
+  <div id="appp">
+
+    <!-- <Sidebar v-if="isAuthenticated" /> -->
     
-    <div :style="{ 'margin-left': isAuthenticated ? sidebarWidth : '0' }">
+    <!-- <div :style="{ 'margin-left': isAuthenticated ? sidebarWidth : '0' }">
       <div v-if="notificationMessage" :class="notificationClass">
         {{ notificationMessage }}
-        <button @click="clearNotification" class="close-btn">&times;</button>
-      </div>
-      <router-view /> <!-- C'est ici que les composants de route seront affichés -->
+        <button @click="clearNotification" class="close-btn">&times;</button> -->
+      <!-- </div> -->
+      <router-view /> 
      
-    </div>
+    <!-- </div> -->
   </div>
 </template>
 
@@ -17,10 +24,11 @@
 import { mapState, mapActions } from 'vuex';
 import Sidebar from './components/sidebar/Sidebar.vue';
 import { sidebarWidth } from '@/components/sidebar/state';
+import TopNavbar from './components/TopNavbar.vue';
 
 export default {
   name: 'App',
-  components: { Sidebar },
+  components: { Sidebar, TopNavbar },
   computed: {
     ...mapState({
       isAuthenticated: state => state.isAuthenticated,

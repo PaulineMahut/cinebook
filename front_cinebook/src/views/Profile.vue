@@ -31,16 +31,16 @@
 
   <div>
     <UserGroups />
-    <router-link to="/add-group">
+    <!-- <router-link to="/add-group">
       <button>Ajouter un Groupe</button>
-    </router-link>
+    </router-link> -->
   </div>
 
   <div>
     <UserMovieList />
-    <router-link to="/add-list">
+    <!-- <router-link to="/add-list">
       <button>Ajouter une liste</button>
-    </router-link>
+    </router-link> -->
   </div>
 
   <div>

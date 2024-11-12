@@ -83,6 +83,7 @@ model Group {
   id            Int               @id @default(autoincrement())
   name          String
   description   String
+  coverPhoto    String?
   creatorId     Int
   creator       User              @relation("GroupCreator", fields: [creatorId], references: [id])
   createdAt     DateTime          @default(now())

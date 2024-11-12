@@ -12,7 +12,7 @@
       </select>
     </div>
 
-    <div v-if="movies.length">
+    <div v-if="movies.length" class="carrousel-search">
       <h2>Movies:</h2>
       <carousel :items-to-show="5">
         <slide v-for="movie in movies" :key="movie.id">

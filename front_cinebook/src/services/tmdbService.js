@@ -50,6 +50,33 @@ export async function fetchMovieDetails(movieId) {
   return data; // Inclut poster_path, title, overview, etc.
 }
 
+export async function fetchMovieCast(movieId) {
+  const response = await fetch(`${BASE_URL}/movie/${movieId}/credits?api_key=${API_KEY}&language=${LANGUAGE}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch movie cast');
+  }
+  const data = await response.json();
+  return data.cast;
+}
+
+export async function fetchMovieReviews(movieId) {
+  const response = await fetch(`${BASE_URL}/movie/${movieId}/reviews?api_key=${API_KEY}&language=${LANGUAGE}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch movie reviews');
+  }
+  const data = await response.json();
+  return data.results;
+}
+
+export async function fetchSimilarMoviesD(movieId) {
+  const response = await fetch(`${BASE_URL}/movie/${movieId}/similar?api_key=${API_KEY}&language=${LANGUAGE}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch similar movies');
+  }
+  const data = await response.json();
+  return data.results;
+}
+
 export async function fetchPopularMovies() {
   const response = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=${LANGUAGE}`);
   if (!response.ok) {

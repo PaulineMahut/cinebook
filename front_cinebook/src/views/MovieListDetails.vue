@@ -1,29 +1,29 @@
 <template>
-  <div>
+  <div class="movie-list-details-container">
     <h2>Détails de la Liste de Films</h2>
-    <div v-if="movieList">
+    <div v-if="movieList" class="movie-list-details-card">
       <h3>{{ movieList.name }}</h3>
       <p>{{ movieList.description }}</p>
       <h4>Films</h4>
       <ul>
-        <li v-for="item in movieList.items" :key="item.id">
-          <img v-if="posterCache[item.tmdbId]" :src="posterCache[item.tmdbId]" alt="Affiche du film" />
-          {{ item.title }}
-          <button @click="removeMovieFromList(item.id)">Retirer</button>
+        <li v-for="item in movieList.items" :key="item.id" class="movie-item">
+          <img v-if="posterCache[item.tmdbId]" :src="posterCache[item.tmdbId]" alt="Affiche du film" class="movie-poster" />
+          <span>{{ item.title }}</span>
+          <button @click="removeMovieFromList(item.id)" class="btn-remove">Retirer</button>
         </li>
       </ul>
-      <div v-if="isCreator">
+      <h4>Ajouter un Film</h4>
+      <SearchBar @movieSelected="addMovieToList" />
+      <div v-if="isCreator" class="creator-options">
         <h4>Partager la Liste</h4>
         <select v-model="selectedGroupId">
           <option disabled value="">Sélectionnez un groupe</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
         </select>
-        <button @click="shareListWithGroup" :disabled="!selectedGroupId">Partager</button>
+        <button @click="shareListWithGroup" :disabled="!selectedGroupId" class="btn-share">Partager</button>
         <h4>Lancer une session de vote</h4>
-        <button @click="goToCreateVotingSession">Lancer une session de vote</button>
+        <button @click="goToCreateVotingSession" class="btn-vote">Lancer une session de vote</button>
       </div>
-      <h4>Ajouter un Film</h4>
-      <SearchBar @movieSelected="addMovieToList" />
     </div>
     <p v-else>Chargement des détails de la liste de films...</p>
   </div>
@@ -213,12 +213,101 @@ export default {
 
 <style scoped>
 /* Style pour la page de détails de la liste de films */
-img {
+.movie-list-details-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  color: #343a40;
+  margin-bottom: 20px;
+}
+
+.movie-list-details-card {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h3 {
+  color: #343a40;
+  margin-bottom: 10px;
+}
+
+p {
+  color: #6c757d;
+  margin-bottom: 20px;
+}
+
+h4 {
+  color: #495057;
+  margin-bottom: 10px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.movie-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.movie-poster {
   width: 100px;
   height: auto;
   margin-right: 10px;
 }
-button {
-  margin-left: 10px;
+
+.btn-remove {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.btn-remove:hover {
+  background-color: #c82333;
+}
+
+.creator-options {
+  margin-top: 20px;
+}
+
+select {
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  margin-right: 10px;
+  background-color: #ffffff;
+  color: #495057;
+}
+
+.btn-share,
+.btn-vote {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.btn-share:hover,
+.btn-vote:hover {
+  background-color: #0056b3;
 }
 </style>

@@ -33,10 +33,10 @@ export default {
     <SidebarLink to="/" icon="fas fa-home">Home</SidebarLink>
     <SidebarLink to="/dashboard" icon="fas fa-columns">Dashboard</SidebarLink>
     <SidebarLink to="/recherche" icon="fas fa-chart-bar">Recherche</SidebarLink>
-    <SidebarLink to="/profile" icon="fas fa-users">Profile</SidebarLink>
+    <SidebarLink to="/profile" icon="fas fa-user">Profile</SidebarLink>
     <SidebarLink to="/map" icon="fas fa-image">Map</SidebarLink>
-    <SidebarLink to="/notifications" icon="fas fa-bell">Notificaion</SidebarLink>
-    <SidebarLink to="/settings" icon="fas fa-bell">Paramètres</SidebarLink>
+    <SidebarLink to="/notifications" icon="fas fa-bell">Notifications</SidebarLink>
+    <SidebarLink to="/settings" icon="fas fa-gear">Paramètres</SidebarLink>
 
     <span
       class="collapse-icon"

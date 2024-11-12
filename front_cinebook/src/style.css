@@ -24,7 +24,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -63,10 +62,9 @@ border-radius: 20px;
 justify-content: center;
 }
 
-#app {
+#appp {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
 }
 
 @media (prefers-color-scheme: light) {
