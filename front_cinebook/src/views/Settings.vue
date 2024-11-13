@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="settings-container-page">
     <div v-if="notificationMessage" :class="notificationClass">
       {{ notificationMessage }}
       <button @click="clearNotification" class="close-btn">&times;</button>
@@ -34,6 +34,7 @@ export default {
       pseudo: '',
       email: '',
       profilePicture: null,
+      currentProfilePictureUrl: '', // Ajoutez cette ligne pour stocker l'URL de la photo de profil actuelle
     };
   },
   computed: {
@@ -43,7 +44,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(['updateUserProfile', 'clearNotificationMessage']),
+    ...mapActions(['updateUserProfile', 'clearNotificationMessage', 'fetchUserProfile']),
     onFileChange(event) {
       this.profilePicture = event.target.files[0];
     },
@@ -53,23 +54,35 @@ export default {
       formData.append('email', this.email);
       if (this.profilePicture) {
         formData.append('profilePicture', this.profilePicture);
+      } else if (this.currentProfilePictureUrl) {
+        formData.append('currentProfilePictureUrl', this.currentProfilePictureUrl); // Incluez l'URL de la photo de profil actuelle
       }
       await this.updateUserProfile(formData);
     },
     clearNotification() {
       this.clearNotificationMessage();
     },
+    async loadUserProfile() {
+      await this.fetchUserProfile();
+      if (this.userProfile) {
+        this.pseudo = this.userProfile.pseudo;
+        this.email = this.userProfile.email;
+        this.currentProfilePictureUrl = this.userProfile.profilePicture; // Stockez l'URL de la photo de profil actuelle
+      }
+    },
   },
-  mounted() {
-    if (this.userProfile) {
-      this.pseudo = this.userProfile.pseudo;
-      this.email = this.userProfile.email;
-    }
+  async mounted() {
+    await this.loadUserProfile();
   },
 };
 </script>
 
 <style scoped>
+
+.settings-container-page {
+  margin-top: 50px;
+}
+
 .settings-container {
   max-width: 600px;
   margin: 0 auto;

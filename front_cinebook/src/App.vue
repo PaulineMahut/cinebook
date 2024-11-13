@@ -1,8 +1,6 @@
 <template>
   <div>
-    <TopNavbar />
-
-
+    <TopNavbar v-if="isAuthenticated" />
   </div>
 
   <div id="appp">

@@ -1,4 +1,5 @@
 <template>
+  <div class="profile-page-container">
   <div class="profile-container">
     <!-- Vérification si userProfile existe avant d'afficher les informations -->
     <div v-if="userProfile" class="profile-card">
@@ -53,6 +54,7 @@
       </li>
     </ul>
   </div>
+</div>
 </template>
 
 <script>
@@ -125,11 +127,18 @@ export default {
 </script>
 
 <style scoped>
+
+.profile-page-container {
+  margin: 0 200px;
+
+}
+
 .profile-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 20px;
+  margin-top: 50px;
+
 }
 
 .profile-card {

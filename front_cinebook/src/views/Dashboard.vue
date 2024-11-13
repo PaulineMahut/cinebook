@@ -1,13 +1,13 @@
 <template>
-  <div>
+  <div class="container-dashboard">
     <div>
       <h3>Hello {{ userName }}! 👋</h3>
       <h5>Quoi de prévu aujourd'hui ?</h5>
     </div>
-    <!-- <div v-if="notificationMessage" :class="notificationClass">
+    <div v-if="notificationMessage" :class="notificationClass">
       {{ notificationMessage }}
       <button @click="clearNotification" class="close-btn">&times;</button>
-    </div> -->
+    </div>
     <div v-if="errorMessage">{{ errorMessage }}</div>
     <MovieList />
     <!-- <SearchByGenre /> -->
@@ -75,6 +75,11 @@ export default {
 </script>
 
 <style scoped>
+
+.container-dashboard {
+  margin: 0 200px;
+  margin-top: 50px;
+}
 .notification-success {
   background-color: #d4edda; /* Vert clair pour les notifications de succès */
   color: #155724;
@@ -83,6 +88,7 @@ export default {
   border: 1px solid #c3e6cb;
   border-radius: 4px;
   position: relative;
+  
 }
 
 .notification-error {

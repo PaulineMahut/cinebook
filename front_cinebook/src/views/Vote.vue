@@ -1,11 +1,15 @@
 <template>
-  <div v-if="votingSession">
+  <div v-if="votingSession" class="vote-page-container">
     <div class="voting-session-header">
       <p v-if="votingSession.movieList.user">
         Un vote a été lancé par <span>{{ votingSession.movieList.user.pseudo }} !</span>
       </p>
       <p>{{ votingSession.description }}</p>
     </div>
+
+    <div class="voting-center">
+
+  
 
     <div class="voting-session-details">
       <div class="session-info">
@@ -49,6 +53,7 @@
         </li>
       </ul>
     </div>
+  </div>
   </div>
   <p v-else>Chargement des détails de la session de vote...</p>
 </template>
@@ -153,6 +158,10 @@ export default {
 </script>
 
 <style scoped>
+
+.vote-page-container {
+  margin: 50px 200px 50px 200px;
+}
 .voting-session-header p {
   margin-bottom: 15px; /* Ajustez selon vos besoins */
 }
@@ -169,6 +178,17 @@ export default {
   color: #5DF6FF;
   margin-right: 8px;
 }
+
+.voting-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.result-vote {
+  width: 700px;
+}
+
 .result-vote h2 {
   margin-bottom: 30px; /* Espace sous le titre */
 }

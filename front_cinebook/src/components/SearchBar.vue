@@ -87,4 +87,8 @@ li:hover {
   height: auto;
   margin-right: 10px;
 }
+
+.search-movie-list {
+  margin-top: 20px;
+}
 </style>

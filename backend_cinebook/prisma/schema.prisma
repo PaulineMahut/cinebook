@@ -25,6 +25,8 @@ model User {
   memberships            GroupMembership[]       @relation("UserMembership")
   movieLists             MovieList[]             @relation("UserMovieLists")
   votes                  Vote[]
+  comments               Comment[]               @relation("UserComments")
+
 }
 
 model Movie {
@@ -157,6 +159,16 @@ model Vote {
   votingSession   VotingSession   @relation(fields: [votingSessionId], references: [id])
   movieListItem   MovieListItem   @relation(fields: [movieListItemId], references: [id])
   createdAt       DateTime        @default(now())
+}
+
+model Comment {
+  id          Int      @id @default(autoincrement())
+  content     String
+  rating      Float
+  createdAt   DateTime @default(now())
+  userId      Int
+  tmdbId      Int
+  user        User     @relation("UserComments", fields: [userId], references: [id])
 }
 
 enum Role {

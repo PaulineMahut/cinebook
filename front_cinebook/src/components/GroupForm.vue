@@ -120,15 +120,16 @@ export default {
 #create-group {
   max-width: 600px;
   margin: auto;
-  background-color: #f8f9fa;
+  background-color: #343a40;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 50px;
 }
 
 h2 {
   text-align: center;
-  color: #343a40;
+  color: white;
 }
 
 form {
@@ -144,7 +145,7 @@ label {
   font-weight: bold;
   margin-bottom: 5px;
   display: block;
-  color: #495057;
+  color: white;
 }
 
 input[type="text"],
@@ -152,7 +153,7 @@ textarea,
 input[type="file"] {
   width: 100%;
   padding: 10px;
-  border: 1px solid #dee2e6;
+  background-color: #ffffff1f;
   border-radius: 5px;
   box-sizing: border-box;
 }

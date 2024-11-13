@@ -436,8 +436,8 @@ app.get('/api/user/profile', authenticateJWT, async (req, res) => {
 app.put('/api/user/profile', authenticateJWT, upload.single('profilePicture'), async (req, res) => {
     try {
       const userId = req.user.userId;
-      const { pseudo, email } = req.body;
-      let profilePicture = null;
+      const { pseudo, email, currentProfilePictureUrl } = req.body;
+      let profilePicture = currentProfilePictureUrl; // Utilisez l'URL de la photo de profil actuelle par défaut
   
       if (req.file) {
         profilePicture = `/uploads/${req.file.filename}`;
@@ -1564,6 +1564,54 @@ app.post('/api/voting-sessions/:sessionId/vote', authenticateJWT, checkGroupMemb
         res.status(500).json({ error: 'Erreur lors du vote' });
     }
 });
+
+
+///////////// COMMENTAIRES /////////////
+
+// Endpoint pour ajouter un commentaire
+app.post('/api/movies/:tmdbId/comments', authenticateJWT, async (req, res) => {
+    const { content, rating } = req.body;
+    const userId = req.user.userId;
+    const tmdbId = parseInt(req.params.tmdbId);
+  
+    try {
+      const comment = await prisma.comment.create({
+        data: {
+          content,
+          rating,
+          userId,
+          tmdbId,
+        },
+      });
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      res.status(500).json({ error: 'Failed to add comment' });
+    }
+  });
+  
+  // Endpoint pour récupérer les commentaires d'un film
+  app.get('/api/movies/:tmdbId/comments', async (req, res) => {
+    const tmdbId = parseInt(req.params.tmdbId);
+  
+    try {
+      const comments = await prisma.comment.findMany({
+        where: { tmdbId },
+        include: {
+          user: {
+            select: {
+              pseudo: true,
+              profilePicture: true,
+            },
+          },
+        },
+      });
+      res.status(200).json(comments);
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+      res.status(500).json({ error: 'Failed to fetch comments' });
+    }
+  });
 
 // app.get('/api/protected', authenticateJWT, (req, res) => {
 //     res.json({ message: 'This is a protected route', user: req.user });

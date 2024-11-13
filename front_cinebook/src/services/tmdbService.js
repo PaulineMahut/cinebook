@@ -102,6 +102,15 @@ export async function fetchUserAddedMoviesWithGenres() {
   return response.json(); // Retourner les films ajoutés par l'utilisateur avec genres
 }
 
+export async function fetchMovieImages(movieId) {
+  const response = await fetch(`${BASE_URL}/movie/${movieId}/images?api_key=${API_KEY}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch movie images');
+  }
+  const data = await response.json();
+  return data.backdrops; // Retourner uniquement les backdrops
+}
+
 export async function fetchMovieGenres() {
   const response = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=${LANGUAGE}`);
   if (!response.ok) {

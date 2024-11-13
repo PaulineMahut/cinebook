@@ -80,7 +80,6 @@
     background-color: #343a40;
     padding: 10px 20px;
     color: white;
-    margin-bottom: 50px;
   }
   
   .left-section {

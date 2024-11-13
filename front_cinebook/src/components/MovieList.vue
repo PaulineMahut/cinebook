@@ -32,7 +32,7 @@
 
     <div v-if="errorMessage">{{ errorMessage }}</div>
 
-    <div v-if="filteredMovies.length">
+    <div v-if="filteredMovies.length" class="search-movie-list">
       <carousel :items-to-show="5">
         <slide v-for="movie in filteredMovies" :key="movie.id">
           <router-link :to="{ name: 'MovieDetails', params: { id: movie.id } }">
@@ -121,6 +121,11 @@ export default {
 </script>
 
 <style scoped>
+
+.search-movie-list {
+  margin-top: 20px;
+}
+
 .carousel-img {
   width: 100%; /* Pour s'assurer que les images s'adaptent au carrousel */
   height: auto; /* Maintient le rapport d'aspect des images */

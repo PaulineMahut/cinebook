@@ -94,6 +94,7 @@ export default {
 <style scoped>
 .groups-container {
   margin: 20px;
+  max-width: 100%;
 }
 
 /* .carousel__slide {

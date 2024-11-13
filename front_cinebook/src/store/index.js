@@ -68,24 +68,27 @@ const store = createStore({
     },
     async updateUserProfile({ commit }, formData) {
       const token = localStorage.getItem('token');
+      if (!token) return;
+
       try {
         const response = await fetch('http://localhost:3000/api/user/profile', {
           method: 'PUT',
           headers: {
-            Authorization: `Bearer ${token}`,
+            'Authorization': `Bearer ${token}`,
           },
           body: formData,
         });
 
-        if (response.ok) {
-          const updatedUser = await response.json();
-          commit('setUserProfile', updatedUser);
-          commit('setNotificationMessage', 'Profil mis à jour avec succès');
-        } else {
-          console.error('Erreur lors de la mise à jour du profil utilisateur');
+        if (!response.ok) {
+          throw new Error('Failed to update user profile');
         }
+
+        const updatedProfile = await response.json();
+        commit('setUserProfile', updatedProfile);
+        commit('setNotificationMessage', 'Profil mis à jour avec succès');
       } catch (error) {
-        console.error('Erreur lors de la requête API :', error);
+        console.error('Error updating user profile:', error);
+        commit('setNotificationMessage', 'Erreur lors de la mise à jour du profil');
       }
     },
     login({ commit }, token) {
