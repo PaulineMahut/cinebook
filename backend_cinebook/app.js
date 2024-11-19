@@ -375,6 +375,7 @@ app.get('/api/users', authenticateJWT, async (req, res) => {
                 id: true,
                 pseudo: true,
                 email: true,
+                profilePicture: true,
             },
         });
 

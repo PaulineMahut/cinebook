@@ -163,6 +163,7 @@
     padding: 10px;
     display: flex;
     flex-direction: column;
+    z-index: 1;
   }
   
   .dropdown-menu a {
