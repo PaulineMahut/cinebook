@@ -4,7 +4,8 @@
     <div v-if="recommendedMovies.length > 0">
       <carousel :items-to-show="7"
       :breakpoints="responsiveBreakpoints"
-      :wrap-around="wrapAround">
+      :wrap-around="wrapAround"
+      :navigation-enabled="true">
         <slide v-for="movie in recommendedMovies" :key="movie.id">
           <router-link v-if="movie.id" :to="{ name: 'MovieDetails', params: { id: movie.id } }">
             <img class="carousel-img" :src="getPosterUrl(movie.poster_path)" :alt="movie.title" />
@@ -147,5 +148,12 @@
   .carousel__prev, .carousel__next {
     color: turquoise;
   }
+
+  /* Media query pour les écrans en dessous de 576 pixels */
+@media (max-width: 576px) {
+  .carrousel-recom .carousel__slide {
+    margin-right: 0; /* Supprime le margin-right pour les petits écrans */
+  }
+}
   </style>
   

@@ -129,8 +129,9 @@ export default {
 
 /* Media query pour les écrans en dessous de 576 pixels */
 @media (max-width: 576px) {
-  .carrousel-popular {
-    overflow: hidden; /* Supprime le débordement */
+  
+  .carrousel-popular .carousel__slide {
+    margin-right: 0; /* Supprime le margin-right pour les petits écrans */
   }
 }
 </style>

@@ -42,7 +42,8 @@ export default {
     Slide,
     Navigation,
     Pagination,
-    }, computed: {
+  },
+  computed: {
         computedItemsToShow() {
   const maxItemsToShow = 7;
   return this.movies ? Math.min(this.movies.length, maxItemsToShow) : 1;

@@ -89,7 +89,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 
 .carousel-img {
   width: 100%; /* Pour s'assurer que les images s'adaptent au carrousel */
@@ -118,7 +118,14 @@ export default {
   margin-bottom: 50px;
 }
 
-.carrousel-random .carousel__slide {
-  margin-right: 15px;}
-  
+.carrousel-popular .carousel__prev, .carousel__next {
+  color: turquoise;
+}
+  @media (max-width: 576px) {
+
+  .carrousel-random .carousel__slide {
+    margin-right: 0;
+  }
+
+}
 </style>
