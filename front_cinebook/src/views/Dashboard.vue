@@ -165,6 +165,12 @@ export default {
     padding: 0 10px; /* Réduire encore plus les marges pour les petits écrans */
     margin-top: 20px;
   }
+
+  .shortcuts .shortcut {
+    width: 60px;
+    height: 60px;
+    border-radius: 80px;
+  }
 }
 .notification-success {
   background-color: #d4edda; /* Vert clair pour les notifications de succès */

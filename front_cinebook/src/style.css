@@ -97,6 +97,9 @@ h1 {
   justify-content: center;
 }
 
+#appp {
+  margin: 0 5rem;
+}
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -111,4 +114,11 @@ h1 {
   button {
     background-color: #f9f9f9;
   }
+}
+
+@media screen and (max-width: 768px) {
+  #appp {
+    margin: 0 2rem;
+  }
+  
 }

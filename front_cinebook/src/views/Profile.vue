@@ -168,15 +168,13 @@ export default {
   cursor: pointer;
 }
 
-.profile-page-container {
-  margin: 0 5em;
-}
 
 .profile-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 50px;
+  margin-bottom: 100px;
 }
 
 .profile-card {

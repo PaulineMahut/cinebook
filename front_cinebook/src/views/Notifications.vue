@@ -208,7 +208,6 @@ export default {
 <style>
 
 .container-page-notification {
-  margin: 0 5em;
   margin-top: 50px;
 }
 

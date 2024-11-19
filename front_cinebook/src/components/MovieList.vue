@@ -174,6 +174,13 @@ select option {
 @media (max-width: 800px) {
   .search-bar {
     width: fit-content;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .search-bar input {
+    max-width: 100px;
   }
 }
 </style>
