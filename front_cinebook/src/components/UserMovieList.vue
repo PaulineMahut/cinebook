@@ -2,7 +2,10 @@
   <div class="movie-lists-container">
     <h2>Mes Listes de Films</h2>
     <div v-if="movieLists.length">
-      <carousel :items-to-show="computedItemsToShow" :breakpoints="responsiveBreakpoints"
+      <carousel 
+        :items-to-show="computedItemsToShow" 
+        :breakpoints="responsiveBreakpoints" 
+        :navigation-enabled="true"
       >
         <!-- Carte spéciale pour créer une nouvelle liste de films -->
         <slide
@@ -67,6 +70,20 @@ export default {
       const maxItemsToShow = 6;
       return this.movieLists ? Math.min(this.movieLists.length, maxItemsToShow) : 1;
     },
+    responsiveBreakpoints() {
+      // Calcul des breakpoints en fonction du nombre de groupes disponibles
+      return {
+        1200: { itemsToShow: this.computedItemsToShow },
+        1024: { itemsToShow: Math.min(this.movieLists.length, 3)},
+        768: { itemsToShow: Math.min(this.movieLists.length, 2) },
+        576: { itemsToShow: Math.min(this.movieLists.length, 2) },
+        0: { itemsToShow: Math.min(this.movieLists.length, 1) },
+      };
+    },
+    wrapAround() {
+      // Désactiver le wrap-around s'il y a moins d'éléments que le nombre à afficher
+      return this.groups.length > this.computedItemsToShow;
+    },
   },
   methods: {
     async fetchMovieLists() {
@@ -98,23 +115,19 @@ export default {
         alert(`Failed to fetch movie lists: ${error.message}`);
       }
     },
-    responsiveBreakpoints() {
-    // Calcul des breakpoints en fonction du nombre de films disponibles
-    return {
-      1200: { itemsToShow: this.computedItemsToShow },
-      1024: { itemsToShow: this.computedItemsToShow },
-      768: { itemsToShow: this.computedItemsToShow },
-      576: { itemsToShow: Math.min(this.movies.length, 4) },
-      0: { itemsToShow: Math.min(this.movies.length, 1) },
-    };
-  },
-    wrapAround() {
-    // Désactiver le wrap-around s'il y a moins d'éléments que le nombre à afficher
-    return this.movies.length > this.computedItemsToShow;
-  },
     getCoverPhotoUrl(path) {
       return `http://localhost:3000${path}`;
     },
+    handleResize() {
+      this.$forceUpdate(); // Force la mise à jour du composant pour recalculer les propriétés calculées
+    },
+  },
+  mounted() {
+    this.fetchMovieLists(); // Appeler fetchGroups lorsque le composant est monté
+    window.addEventListener('resize', this.handleResize);
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.handleResize);
   },
 };
 </script>
@@ -123,10 +136,14 @@ export default {
 <style scoped>
 
 .movie-lists-container {
-  margin: 20px;
+  margin-top: 50px;
+  margin-bottom: 50px;
   max-width: 100%;
-
 }
+
+.movie-lists-container h2 {
+  margin-bottom: 50px;
+} 
 
 .movie-list-card {
   width: 200px;

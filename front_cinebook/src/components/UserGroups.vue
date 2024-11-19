@@ -2,7 +2,11 @@
   <div class="groups-container">
     <h2>Mes Groupes</h2>
     <div v-if="groups.length">
-      <carousel :items-to-show="computedItemsToShow" :breakpoints="responsiveBreakpoints" :center-mode="false">
+      <carousel 
+        :items-to-show="computedItemsToShow" 
+        :breakpoints="responsiveBreakpoints" 
+        :navigation-enabled="true"
+      >
         <slide
           v-for="group in groups"
           :key="group.id"
@@ -51,13 +55,24 @@ export default {
       groups: [],
     };
   },
-  async mounted() {
-    await this.fetchGroups();
-  },
   computed: {
     computedItemsToShow() {
       const maxItemsToShow = 6;
       return this.groups ? Math.min(this.groups.length, maxItemsToShow) : 1;
+    },
+    responsiveBreakpoints() {
+      // Calcul des breakpoints en fonction du nombre de groupes disponibles
+      return {
+        1200: { itemsToShow: this.computedItemsToShow },
+        1024: { itemsToShow: Math.min(this.groups.length, 3)},
+        768: { itemsToShow: Math.min(this.groups.length, 2) },
+        576: { itemsToShow: Math.min(this.groups.length, 2) },
+        0: { itemsToShow: Math.min(this.groups.length, 1) },
+      };
+    },
+    wrapAround() {
+      // Désactiver le wrap-around s'il y a moins d'éléments que le nombre à afficher
+      return this.groups.length > this.computedItemsToShow;
     },
   },
   methods: {
@@ -90,38 +105,39 @@ export default {
         alert(`Failed to fetch groups: ${error.message}`);
       }
     },
-    responsiveBreakpoints() {
-    // Calcul des breakpoints en fonction du nombre de films disponibles
-    return {
-      1200: { itemsToShow: this.computedItemsToShow },
-      1024: { itemsToShow: this.computedItemsToShow },
-      768: { itemsToShow: this.computedItemsToShow },
-      576: { itemsToShow: Math.min(this.movies.length, 4) },
-      0: { itemsToShow: Math.min(this.movies.length, 1) },
-    };
-  },
-    wrapAround() {
-    // Désactiver le wrap-around s'il y a moins d'éléments que le nombre à afficher
-    return this.movies.length > this.computedItemsToShow;
-  },
     getCoverPhotoUrl(path) {
       return `http://localhost:3000${path}`;
     },
+    handleResize() {
+      this.$forceUpdate(); // Force la mise à jour du composant pour recalculer les propriétés calculées
+    },
+  },
+  mounted() {
+    this.fetchGroups(); // Appeler fetchGroups lorsque le composant est monté
+    window.addEventListener('resize', this.handleResize);
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.handleResize);
   },
 };
 </script>
 
 <style scoped>
+
 .groups-container {
-  margin: 20px;
+  margin-top: 50px;
+  margin-bottom: 50px;
   max-width: 100%;
+}
+
+.groups-container h2 {
+  margin-bottom: 50px;
 }
 
 .group-card {
   width: 200px;
   height: 300px;
   background-color: #343a40;
-  border: 1px solid #dee2e6;
   border-radius: 10px;
   padding: 20px;
   text-align: center;
@@ -166,5 +182,18 @@ export default {
   color: white;
   text-align: center;
   margin-top: auto;
+}
+
+/* Media query pour les écrans en dessous de 576 pixels */
+@media (max-width: 576px) {
+  .groups-container {
+    overflow: hidden; /* Supprime le débordement */
+  }
+  .group-card {
+    margin-right: 0; /* Supprime le margin-right pour les petits écrans */
+  }
+  .carousel__prev, .carousel__next {
+    display: block; /* Assurez-vous que les flèches de navigation sont affichées */
+  }
 }
 </style>
