@@ -12,7 +12,7 @@ model User {
   email                  String                  @unique
   password               String
   pseudo                 String?
-  profilePicture String?
+  profilePicture String? @default("user_default.png")
   role                   Role                    @default(USER)
   userMovies             UserMovie[]
   friends                Friendship[]            @relation("UserFriends")
@@ -120,7 +120,7 @@ model MovieList {
 model MovieListItem {
   id          Int      @id @default(autoincrement())
   listId      Int
-  list        MovieList @relation(fields: [listId], references: [id])
+  list        MovieList @relation(fields: [listId], references: [id], onDelete: Cascade)
   title       String
   overview    String
   voteAverage Float
@@ -132,7 +132,8 @@ model SharedList {
   id        Int       @id @default(autoincrement())
   listId    Int
   groupId   Int
-  list      MovieList @relation(fields: [listId], references: [id])
+  list      MovieList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  canAddMovies Boolean   @default(false)
   group     Group     @relation("GroupSharedLists", fields: [groupId], references: [id])
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now())
@@ -143,11 +144,11 @@ model VotingSession {
   movieListId Int
   description String
   endTime     DateTime
-  movieList   MovieList       @relation(fields: [movieListId], references: [id])
+  movieList   MovieList       @relation(fields: [movieListId], references: [id], onDelete: Cascade)
   votes       Vote[]
   notifications Notification[]
   createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  updatedAt   DateTime        @default(now())
 }
 
 model Vote {

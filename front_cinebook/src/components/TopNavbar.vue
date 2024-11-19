@@ -1,29 +1,35 @@
 <template>
-    <nav class="top-navbar">
-      <div class="left-section">
-        <div class="logo">
-          <img src="../assets/logo_traitsclair.png" alt="Logo" />
-        </div>
-        <div class="nav-links">
-          <RouterLink to="/" icon="fas fa-home">Home</RouterLink>
-          <RouterLink to="/dashboard" icon="fas fa-columns">Dashboard</RouterLink>
-          <RouterLink to="/map" icon="fas fa-image">Map</RouterLink>
+  <nav class="top-navbar">
+    <div class="left-section">
+      <div class="logo">
+        <img src="../assets/logo_traitsclair.png" alt="Logo" />
+      </div>
+      <!-- Menu hamburger pour les petits écrans -->
+      <div class="menu-toggle" @click="toggleMobileMenu">
+        <i class="fa-solid fa-bars"></i>
+      </div>
+      <!-- Liens de navigation -->
+      <div class="nav-links" :class="{ open: mobileMenuOpen }">
+        <RouterLink to="/" icon="fas fa-home">Home</RouterLink>
+        <RouterLink to="/dashboard" icon="fas fa-columns">Dashboard</RouterLink>
+        <RouterLink to="/map" icon="fas fa-image">Map</RouterLink>
+      </div>
+    </div>
+    <div class="right-section">
+      <RouterLink to="/recherche" class="icon-navbar"><i class="fa-solid fa-magnifying-glass"></i></RouterLink>
+      <RouterLink to="/notifications" class="icon-navbar"><i class="fa-solid fa-bell"></i></RouterLink>
+      <div class="profile-container" @click="toggleDropdown">
+        <img :src="userProfilePicture" alt="Photo de profil" class="profile-picture" />
+        <div v-if="dropdownOpen" class="dropdown-menu">
+          <RouterLink to="/profile">Profile</RouterLink>
+          <RouterLink to="/settings">Paramètres</RouterLink>
+          <LogoutBouton />
         </div>
       </div>
-      <div class="right-section">
-        <RouterLink to="/recherche" class="icon-navbar"><i class="fa-solid fa-magnifying-glass"></i></RouterLink>
-        <RouterLink to="/notifications" class="icon-navbar"><i class="fa-solid fa-bell"></i></RouterLink>
-        <div class="profile-container" @click="toggleDropdown">
-          <img :src="userProfilePicture" alt="Photo de profil" class="profile-picture" />
-          <div v-if="dropdownOpen" class="dropdown-menu">
-            <RouterLink to="/profile">Profile</RouterLink>
-            <RouterLink to="/settings">Paramètres</RouterLink>
-            <LogoutBouton />
-          </div>
-        </div>
-      </div>
-    </nav>
-  </template>
+    </div>
+  </nav>
+</template>
+
   
   <script>
   import { RouterLink } from 'vue-router';
@@ -39,6 +45,7 @@
       return {
         userProfilePicture: '../assets/default-profile.png', // Remplacez par le chemin de l'image par défaut
         dropdownOpen: false,
+        mobileMenuOpen: false,
       };
     },
     async mounted() {
@@ -66,8 +73,11 @@
         }
       },
       toggleDropdown() {
-        this.dropdownOpen = !this.dropdownOpen;
-      },
+    this.dropdownOpen = !this.dropdownOpen;
+  },
+  toggleMobileMenu() {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  },
     },
   };
   </script>
@@ -164,5 +174,98 @@
   
   .dropdown-menu a:hover {
     background-color: #f0f0f0;
+  }
+
+  .menu-toggle {
+  display: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: white;
+}
+
+/* Afficher le menu burger uniquement sur tablette */
+@media (min-width: 768px) and (max-width: 400px) {
+  .menu-toggle {
+    display: block; /* Afficher le menu burger */
+  }
+  
+  .nav-links {
+    display: none; /* Cacher les liens de navigation */
+    flex-direction: column;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    background-color: #343a40;
+    width: 100%;
+    padding: 10px 0;
+  }
+
+  .nav-links.open {
+    display: flex; /* Afficher les liens si le menu est ouvert */
+  }
+
+  .nav-links a {
+    margin: 10px 0;
+    padding: 10px;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+  @media (max-width: 768px) {
+  .logo {
+    display: none;
+  }
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    background-color: #343a40;
+    width: 100%;
+    padding: 10px 0;
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-links a {
+    margin: 10px 0;
+    padding: 10px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .right-section {
+    display: flex;
+    gap: 15px;
+  }
+
+  .profile-container {
+    display: flex;
+    align-items: center;
+  }
+
+  .dropdown-menu {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    width: 200px;
+  }
+
+  .icon-navbar {
+    font-size: 18px;
+  }
+
+  .profile-picture {
+    width: 40px;
+    height: 40px;
+  }
   }
   </style>

@@ -105,6 +105,9 @@ const store = createStore({
     clearNotificationMessage({ commit }) {
       commit('setNotificationMessage', '');
     },
+    setNotificationMessage({ commit }, message) {
+      commit('setNotificationMessage', message);
+    },
   },
 });
 

@@ -1,9 +1,13 @@
 <template>
   <div class="profile-page-container">
+    <div v-if="notificationMessage" :class="notificationClass">
+      {{ notificationMessage }}
+      <button @click="clearNotification" class="close-btn">&times;</button>
+    </div>
   <div class="profile-container">
     <!-- Vérification si userProfile existe avant d'afficher les informations -->
     <div v-if="userProfile" class="profile-card">
-      <img v-if="userProfile.profilePicture" :src="getProfilePictureUrl(userProfile.profilePicture)" alt="Photo de profil" class="profile-picture" />
+      <img :src="getProfilePictureUrl(userProfile.profilePicture)" alt="Photo de profil" class="profile-picture" />
       <h2 class="profile-pseudo">{{ userProfile.pseudo }}</h2>
       <div class="profile-stats">
         <div class="profile-stat">
@@ -32,16 +36,10 @@
 
   <div>
     <UserGroups />
-    <!-- <router-link to="/add-group">
-      <button>Ajouter un Groupe</button>
-    </router-link> -->
   </div>
 
   <div>
     <UserMovieList />
-    <!-- <router-link to="/add-list">
-      <button>Ajouter une liste</button>
-    </router-link> -->
   </div>
 
   <div>
@@ -58,7 +56,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapActions } from 'vuex';
 import FavoriteMovies from '@/components/FavoriteMovies.vue';
 import UserGroups from '@/components/UserGroups.vue';
 import CreateMovieList from '../components/CreateMovieList.vue';
@@ -78,9 +76,13 @@ export default {
   },
   computed: {
     // On mappe l'état de Vuex pour obtenir le profil utilisateur
-    ...mapState(['userProfile', 'friendCount', 'movieListCount', 'groupCount']),
+    ...mapState(['userProfile', 'friendCount', 'movieListCount', 'groupCount', 'notificationMessage']),
+    notificationClass() {
+      return this.notificationMessage.includes('succès') ? 'notification-success' : 'notification-error';
+    },
   },
   methods: {
+    ...mapActions(['fetchUserProfile', 'clearNotificationMessage']),
     // Méthode pour aller chercher le profil utilisateur depuis l'API via Vuex
     async fetchUserProfile() {
       await this.$store.dispatch('fetchUserProfile');
@@ -113,9 +115,17 @@ export default {
       }
     },
     getProfilePictureUrl(path) {
-      const url = `http://localhost:3000${path}`;
-      console.log('URL complète de la photo de profil:', url);
+      if (path.startsWith('/images/')) {
+      return `http://localhost:3000${path}`;
+    } else if (path.startsWith('/uploads/')) {
+      return `http://localhost:3000${path}`;
+    } else {
+      return `http://localhost:3000/uploads/${path}`;
+    }      console.log('URL complète de la photo de profil:', url);
       return url;
+    },
+    clearNotification() {
+      this.clearNotificationMessage();
     },
   },
   async mounted() {
@@ -128,9 +138,38 @@ export default {
 
 <style scoped>
 
-.profile-page-container {
-  margin: 0 200px;
+.notification-success {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  position: relative;
+}
 
+.notification-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.profile-page-container {
+  margin: 0 5em;
 }
 
 .profile-container {
@@ -138,7 +177,6 @@ export default {
   flex-direction: column;
   align-items: center;
   margin-top: 50px;
-
 }
 
 .profile-card {

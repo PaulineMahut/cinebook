@@ -1,6 +1,7 @@
 <template>
     <div>
       <h1>Profil de l'utilisateur</h1>
+      <img :src="profilePictureUrl" alt="Photo de profil" class="profile-picture" />
       <p>Email : {{ user.email }}</p>
       <p>Pseudo : {{ user.pseudo }}</p>
       <p>Nombre d'amis : <router-link :to="{ name: 'friends', params: { id: userId } }">{{ friendCount }}</router-link></p>
@@ -16,17 +17,35 @@ export default {
             user: {
                 email: '',
                 pseudo: '',
+                profilePicture: '', // Valeur par défaut pour profilePicture
             },
             friendCount: 0, // Compteur d'amis
             isFriend: false, // Indique si l'utilisateur connecté est déjà ami
             userId: null // Ajout de userId ici
         };
     },
+    computed: {
+        profilePictureUrl() {
+            return this.getProfilePictureUrl(this.user.profilePicture);
+        }
+    },
     async mounted() {
         this.userId = this.$route.params.id; // Affecter la valeur de userId
         await this.loadUserProfile();
     },
     methods: {
+        getProfilePictureUrl(path) {
+            if (!path) {
+                return 'http://localhost:3000/images/user_defaut.png'; // Chemin de l'image par défaut
+            }
+            if (path.startsWith('/images/')) {
+                return `http://localhost:3000${path}`;
+            } else if (path.startsWith('/uploads/')) {
+                return `http://localhost:3000${path}`;
+            } else {
+                return `http://localhost:3000/uploads/${path}`;
+            }
+        },
         async addFriend() {
             const friendId = parseInt(this.userId); // Utilisation de this.userId
             try {
@@ -115,3 +134,13 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.profile-picture {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 20px;
+}
+</style>

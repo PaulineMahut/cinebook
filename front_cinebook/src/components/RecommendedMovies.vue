@@ -2,7 +2,9 @@
   <div class="carrousel-recom">
     <h2>Recommandés pour vous</h2>
     <div v-if="recommendedMovies.length > 0">
-      <carousel :items-to-show="5">
+      <carousel :items-to-show="7"
+      :breakpoints="responsiveBreakpoints"
+      :wrap-around="wrapAround">
         <slide v-for="movie in recommendedMovies" :key="movie.id">
           <router-link v-if="movie.id" :to="{ name: 'MovieDetails', params: { id: movie.id } }">
             <img class="carousel-img" :src="getPosterUrl(movie.poster_path)" :alt="movie.title" />
@@ -42,9 +44,27 @@
     data() {
       return {
         recommendedMovies: [],
+        responsiveBreakpoints: {
+        1200: { itemsToShow: 7 }, // Pour les écrans larges
+        1024: { itemsToShow: 6 }, // Pour les tablettes en mode paysage
+        768: { itemsToShow: 6 },  // Pour les tablettes en mode portrait
+        576: { itemsToShow: 4 },  // Pour les petits écrans de smartphone
+        0: { itemsToShow: 1 },    // Pour les très petits écrans
+      },
       };
     },
+    computed: {
+    isSmallScreen() {
+      return window.innerWidth < 576;
+    },
+    wrapAround() {
+      return !this.isSmallScreen;
+    },
+  },
     methods: {
+      handleResize() {
+      this.$forceUpdate(); // Force la mise à jour du composant pour recalculer les propriétés calculées
+    },
       async loadRecommendations() {
   try {
     console.log('Loading recommendations...');
@@ -86,17 +106,39 @@
 
     mounted() {
       this.loadRecommendations();
+      window.addEventListener('resize', this.handleResize);
     },
+    beforeDestroy() {
+    window.removeEventListener('resize', this.handleResize);
+  },
   };
   </script>
   <style>
-  /* @import './node_modules/vue3-carousel/dist/carousel.css'; Assurez-vous que le chemin est correct */
-  
-  /* Ajoutez des styles personnalisés si nécessaire */
+
   .carousel-img {
-    width: 100%; /* Pour s'assurer que les images s'adaptent au carrousel */
-    height: auto; /* Maintient le rapport d'aspect des images */
+    width: 100%;
+    height: auto;
+    border-radius: 7px;
   }
+  .carousel__slide {
+  align-items: normal;
+}
+  .carrousel-recom h2 {
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+
+  .carrousel-recom .carousel__slide {
+  margin-right: 15px;
+}
+
+  .carousel__prev {
+  left: -50px;
+}
+
+.carousel__next {
+  right: -50px;
+}
   
   .carrousel-recom .carousel__slide {
     margin-right: 15px;

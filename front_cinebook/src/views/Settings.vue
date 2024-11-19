@@ -87,7 +87,7 @@ export default {
   max-width: 600px;
   margin: 0 auto;
   padding: 30px;
-  background-color: rgba(3, 8, 27, 0.3);
+  background-color: #343a40;
   border-radius: 10px;
 }
 
@@ -106,8 +106,7 @@ export default {
   padding: 10px;
   border-radius: 5px;
   margin-bottom: 10px; /* Ajouter une marge inférieure pour plus d'espacement */
-  background-color: #222831;
-}
+  background-color: #ffffff1f;}
 
 button {
   padding: 10px 20px;

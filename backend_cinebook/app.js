@@ -42,12 +42,14 @@ const __dirname = path.dirname(__filename);
 
 // Assurez-vous que le dossier 'uploads' est accessible publiquement
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 ///////////// INSCRIPTION /////////////
 
 // Endpoint pour l'inscription
 app.post('/api/register', async (req, res) => {
     const { email, password, role = 'USER' } = req.body;
+    const defaultProfilePicture = '/images/user_defaut.png';
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -57,6 +59,7 @@ app.post('/api/register', async (req, res) => {
                 email,
                 password: hashedPassword,
                 role,
+                profilePicture: defaultProfilePicture,
             },
         });
         res.status(201).json({ message: 'User created', user });
@@ -473,6 +476,7 @@ app.get('/api/user/profile/:id', async (req, res) => {
             select: { 
                 email: true, 
                 pseudo: true,
+                profilePicture: true,
                 friends: { // Récupérer la relation d'amitié
                     select: { friendId: true } // Sélectionner uniquement l'ID de l'ami
                 }
@@ -490,6 +494,7 @@ app.get('/api/user/profile/:id', async (req, res) => {
         res.json({ 
             email: user.email, 
             pseudo: user.pseudo, 
+            profilePicture: user.profilePicture,
             friendCount 
         }); // Renvoie le nombre d'amis avec d'autres informations
     } catch (error) {
@@ -833,14 +838,14 @@ app.post('/api/notifications/respond', authenticateJWT, async (req, res) => {
                             senderId: userId,
                             type: 'friend_accepted',
                             status: 'unread',
-                            message: `Vous êtes maintenant amis avec ${accepter.pseudo}.`
+                            message: `Vous êtes maintenant amis avec <a href="/profile/${userId}">${req.user.pseudo}</a>.`
                         },
                         {
                             userId: userId,
                             senderId: notification.senderId,
                             type: 'friend_accepted',
                             status: 'unread',
-                            message: `Vous êtes maintenant amis avec ${sender.pseudo}.`
+                            message: `Vous êtes maintenant amis avec <a href="/user/${notification.sender.id}">${notification.sender.pseudo}</a>.`
                         }
                     ]
                 });
@@ -939,7 +944,7 @@ app.post('/api/groups/:groupId/invitations/respond', authenticateJWT, async (req
                     type: 'user_joined_group',
                     status: 'unread',
                     groupId: groupId,
-                    message: `Vous avez rejoint le groupe ${invitation.group.name}.`
+                    message: `Vous avez rejoint le groupe <a href="/group/${groupId}">${invitation.group.name}</a>.`,
                 }
             });
 
@@ -951,7 +956,7 @@ app.post('/api/groups/:groupId/invitations/respond', authenticateJWT, async (req
                     type: 'user_joined_group',
                     status: 'unread',
                     groupId: groupId,
-                    message: `${invitation.sender.pseudo} a accepté l'invitation à rejoindre le groupe ${invitation.group.name}.`
+                    message: `${invitation.sender.pseudo} a accepté l'invitation à rejoindre le groupe <a href="/group/${groupId}">${invitation.group.name}</a>.`
                 }
             });
 
@@ -1195,6 +1200,34 @@ app.get('/api/movie-lists', authenticateJWT, async (req, res) => {
     } catch (error) {
         console.error('Error retrieving movie lists:', error);
         res.status(500).json({ error: 'Failed to retrieve movie lists' });
+    }
+});
+
+// Endpoint pour supprimer une liste de films
+app.delete('/api/movie-lists/:listId', authenticateJWT, async (req, res) => {
+    const listId = parseInt(req.params.listId);
+    const userId = req.user.userId;
+
+    try {
+        // Vérifiez si la liste existe et si l'utilisateur est le créateur
+        const movieList = await prisma.movieList.findUnique({
+            where: { id: listId },
+            include: { user: true },
+        });
+
+        if (!movieList || movieList.userId !== userId) {
+            return res.status(403).json({ error: 'Vous n\'êtes pas autorisé à supprimer cette liste' });
+        }
+
+        // Supprimez la liste (les éléments associés seront supprimés en cascade)
+        await prisma.movieList.delete({
+            where: { id: listId },
+        });
+
+        res.status(204).send(); // Renvoie un statut 204 No Content
+    } catch (error) {
+        console.error('Erreur lors de la suppression de la liste de films:', error);
+        res.status(500).json({ error: 'Erreur lors de la suppression de la liste de films' });
     }
 });
 
@@ -1483,7 +1516,7 @@ app.post('/api/voting-sessions', authenticateJWT, async (req, res) => {
                 senderId: userId,
                 type: 'voting_session_started',
                 status: 'unread',
-                message: `Un vote a été lancé par ${movieList.user.email}. <a href="/voting-sessions/${votingSession.id}">Voir le vote</a>`,
+                message: `Un vote a été lancé par ${movieList.user.pseudo} ! Votez pour le film à regarder avec votre groupe <a href="/voting-sessions/${votingSession.id}">Voir le vote</a>`,
                 votingSessionId: votingSession.id
             }))
         );

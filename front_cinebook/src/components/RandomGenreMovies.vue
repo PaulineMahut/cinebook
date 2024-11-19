@@ -5,7 +5,9 @@
     <div v-if="errorMessage">{{ errorMessage }}</div>
 
     <!-- Carousel for movies -->
-    <carousel v-if="movies.length" :items-to-show="5" :wrap-around="true">
+    <carousel v-if="movies.length" :items-to-show="7"
+      :breakpoints="responsiveBreakpoints"
+      :wrap-around="wrapAround">
       <slide v-for="movie in movies" :key="movie.id">
         <router-link :to="{ name: 'MovieDetails', params: { id: movie.id } }">
           <img class="carousel-img" :src="getPosterUrl(movie.poster_path)" :alt="movie.title" />
@@ -30,6 +32,14 @@ export default {
       movies: [],
       randomGenre: null,
       errorMessage: '',
+      responsiveBreakpoints: {
+        1200: { itemsToShow: 7 }, // Pour les écrans larges
+        1024: { itemsToShow: 6 }, // Pour les tablettes en mode paysage
+        768: { itemsToShow: 6 },  // Pour les tablettes en mode portrait
+        576: { itemsToShow: 4 },
+        // Pour les petits écrans de smartphone
+        0: { itemsToShow: 1 },    // Pour les très petits écrans
+      },
     };
   },
   components: {
@@ -38,7 +48,18 @@ export default {
     Slide,
     Navigation,
   },
+  computed: {
+    isSmallScreen() {
+      return window.innerWidth < 576;
+    },
+    wrapAround() {
+      return !this.isSmallScreen;
+    },
+  },
   methods: {
+    handleResize() {
+      this.$forceUpdate(); // Force la mise à jour du composant pour recalculer les propriétés calculées
+    },
     async loadMoviesForRandomGenre() {
       try {
         this.errorMessage = '';
@@ -60,11 +81,42 @@ export default {
   },
   mounted() {
     this.loadMoviesForRandomGenre();
+    window.addEventListener('resize', this.handleResize);
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.handleResize);
   },
 };
 </script>
 
 <style>
+
+.carousel-img {
+  width: 100%; /* Pour s'assurer que les images s'adaptent au carrousel */
+  height: auto; /* Maintient le rapport d'aspect des images */
+  border-radius: 7px;
+}
+
+.carousel__slide {
+  align-items: normal;
+}
+
+.carrousel-random .carousel__slide {
+  margin-right: 15px;
+}
+
+.carousel__prev {
+  left: -50px;
+}
+
+.carousel__next {
+  right: -50px;
+}
+
+.carrousel-random h2 {
+  margin-top: 50px;
+  margin-bottom: 50px;
+}
 
 .carrousel-random .carousel__slide {
   margin-right: 15px;}

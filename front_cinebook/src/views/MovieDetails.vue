@@ -4,9 +4,10 @@
     <div class="movie-details-content">
       <div class="title-and-button">
         <h1>{{ movie.title }}</h1>
-        <button @click="toggleMovieInDatabase" class="icon-toggle-database">
-          <i class="heart-icon" :class="heartIconClass"></i>
-        </button>
+        <button v-if="!isLoading" @click="toggleMovieInDatabase" class="icon-toggle-database">
+  <i :class="heartIconClass"></i>
+</button>
+
       </div>
       <div class="movie-info">
         <span class="movie-runtime">{{ movie.runtime }} min</span>
@@ -92,6 +93,7 @@
 import { fetchMovieDetails, fetchSimilarMoviesD, fetchMovieCast, fetchMovieImages } from '@/services/tmdbService';
 import { Carousel, Navigation, Slide, Pagination } from 'vue3-carousel'; // Importer le carrousel et les slides
 import { ref, computed } from 'vue';
+import { useToast } from 'vue-toastification';
 
 export default {
   components: {
@@ -103,6 +105,7 @@ export default {
   data() {
     return {
       movie: null,
+      isMovieInDatabase: null,
       cast: [],
       comments: [],
       newComment: {
@@ -113,7 +116,8 @@ export default {
       errorMessage: '',
       isMovieInDatabase: false,
       showCommentModal: false,
-      backdropPath: '', // Ajouter une propriété pour le chemin du backdrop
+      backdropPath: '',
+      isLoading: true,
     };
   },
   computed: {
@@ -124,33 +128,30 @@ export default {
       return this.similarMovies.slice(0, 3);
     },
     heartIconClass() {
-      return {
-        'fa-solid fa-heart': this.isMovieInDatabase,
-        'fa-regular fa-heart': !this.isMovieInDatabase
-      }
+      return this.isMovieInDatabase ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
     },
   },
   methods: {
     async loadMovieDetails() {
-      try {
-        const movieId = this.$route.params.id;
-        this.movie = await fetchMovieDetails(movieId);
-        this.cast = await fetchMovieCast(movieId);
-        this.comments = await this.fetchComments(movieId);
-        this.similarMovies = await fetchSimilarMoviesD(this.movie.genres[0].id);
-        
-        // Récupérer les images du film
-        const backdrops = await fetchMovieImages(movieId);
-        if (backdrops.length > 0) {
-          this.backdropPath = backdrops[0].file_path; // Utiliser le premier backdrop
-        }
-        
-        // Vérifiez si le film est déjà dans la base de données
-        await this.checkIfMovieExists(movieId);
-      } catch (error) {
-        this.errorMessage = error.message;
-      }
-    },
+  try {
+    const movieId = this.$route.params.id;
+    this.movie = await fetchMovieDetails(movieId);
+    this.cast = await fetchMovieCast(movieId);
+    this.comments = await this.fetchComments(movieId);
+    this.similarMovies = await fetchSimilarMoviesD(this.movie.genres[0].id);
+    
+    // Récupérer les images du film
+    const backdrops = await fetchMovieImages(movieId);
+    if (backdrops.length > 0) {
+      this.backdropPath = backdrops[0].file_path;
+    }
+    
+    // Vérifiez si le film est déjà dans la base de données
+    await this.checkIfMovieExists(movieId);
+  } catch (error) {
+    this.errorMessage = error.message;
+  }
+},
     async fetchComments(movieId) {
       const response = await fetch(`http://localhost:3000/api/movies/${movieId}/comments`);
       if (!response.ok) {
@@ -246,53 +247,57 @@ export default {
       }
     },
     async toggleMovieInDatabase() {
-      const previousState = this.isMovieInDatabase;
-
+      const toast = useToast();
       try {
-        // Inverser l'état immédiatement pour l'UI
-        this.isMovieInDatabase = !this.isMovieInDatabase;
-        
-        // Assurez-vous que l'interface utilisateur se met à jour immédiatement
-        await this.$nextTick();
-
-        if (!previousState) {
-          // Si on ajoute le film
-          await this.addMovieToDatabase(this.movie.id);
+        const movieId = this.movie.id;
+        if (!this.isMovieInDatabase) {
+          await this.addMovieToDatabase(movieId);
+          this.isMovieInDatabase = true;
+          toast.success('Le film a été ajouté aux favoris !');
         } else {
-          // Si on supprime le film
-          await this.removeMovieFromDatabase(this.movie.id);
+          await this.removeMovieFromDatabase(movieId);
+          this.isMovieInDatabase = false;
+          toast.success('Le film a été retiré des favoris !');
         }
+        // Recharger la page après un court délai pour permettre à la notification de s'afficher
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500); // Délai de 1,5 seconde
       } catch (error) {
         console.error('Erreur lors du toggle:', error);
-        // En cas d'erreur, revenir à l'état précédent
-        this.isMovieInDatabase = previousState;
+        toast.error('Une erreur est survenue. Veuillez réessayer.');
       }
     },
+
+
+
     async checkIfMovieExists(movieId) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          this.isMovieInDatabase = false;
-          return;
-        }
+  this.isLoading = true; // Commence le chargement
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.isMovieInDatabase = false;
+      this.isLoading = false;
+      return;
+    }
 
-        const response = await fetch(`http://localhost:3000/api/userMovies/${movieId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+    const response = await fetch(`http://localhost:3000/api/userMovies/${movieId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-        if (response.status === 200) {
-          this.isMovieInDatabase = true;
-        } else {
-          this.isMovieInDatabase = false;
-        }
-      } catch (error) {
-        console.error('Erreur lors de la vérification du film:', error);
-        this.isMovieInDatabase = false;
-      }
-    },
+    this.isMovieInDatabase = response.status === 200;
+  } catch (error) {
+    console.error('Erreur lors de la vérification du film:', error);
+    this.isMovieInDatabase = false;
+  } finally {
+    this.isLoading = false; // Fin du chargement
+  }
+},
+
+
     getBackdropUrl(path) {
       return path ? `https://image.tmdb.org/t/p/w1280${path}` : '../assets/user_defaut.png';
     },
@@ -306,19 +311,27 @@ export default {
       return path ? `https://image.tmdb.org/t/p/w500${path}` : '../assets/default-poster.png';
     },
   },
-  mounted() {
-    this.loadMovieDetails();
-  },
-  watch: {
-    '$route.params.id': {
-      handler(newId) {
-        if (newId) {
-          this.checkIfMovieExists(newId);
-        }
-      },
-      immediate: true
-    }
+  mounted() { this.loadMovieDetails();
+  this.checkIfMovieExists(this.$route.params.id).then(() => {
+    this.$forceUpdate(); // Forcer la mise à jour après la vérification
+  });
+},
+watch: {
+  '$route.params.id': {
+    handler(newId) {
+      if (newId) {
+        this.loadMovieDetails(); // Recharger les détails du film
+        this.checkIfMovieExists(newId).then(() => {
+          this.$forceUpdate(); // Forcer le rendu après vérification
+        });
+      }
+    },
+    immediate: true
   }
+}
+
+
+
 };
 </script>
 

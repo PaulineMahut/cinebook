@@ -1,4 +1,8 @@
 <template>
+  <div v-if="notificationMessage" :class="notificationClass">
+      {{ notificationMessage }}
+      <button @click="clearNotification" class="close-btn">&times;</button>
+    </div>
   <div id="create-movie-list">
     <h2>Créer une Liste de Films</h2>
     <form @submit.prevent="createMovieList">
@@ -16,6 +20,8 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex';
+
 export default {
   data() {
     return {
@@ -23,7 +29,14 @@ export default {
       description: '',
     };
   },
+  computed: {
+    ...mapState(['notificationMessage']),
+    notificationClass() {
+      return this.notificationMessage.includes('succès') ? 'notification-success' : 'notification-error';
+    },
+  },
   methods: {
+    ...mapActions(['setNotificationMessage', 'clearNotificationMessage']),
     async createMovieList() {
       const token = localStorage.getItem('token');
 
@@ -48,37 +61,61 @@ export default {
 
         const data = await response.json();
         console.log('Liste de films créée:', data);
+        this.setNotificationMessage('Liste de films créée avec succès');
         // Réinitialiser le formulaire ou rediriger l'utilisateur
         this.name = '';
         this.description = '';
       } catch (error) {
         console.error('Erreur lors de la création de la liste de films:', error);
-        alert(`Failed to create movie list: ${error.message}`);
+        this.setNotificationMessage(`Failed to create movie list: ${error.message}`);
       }
+    },
+    clearNotification() {
+      this.clearNotificationMessage();
     },
   },
 };
 </script>
 
 <style scoped>
-/* Style pour le formulaire de création de liste de films */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
 #create-movie-list {
   max-width: 600px;
-  margin: auto;
-  background-color: #f8f9fa;
+  width: 100%;
+  margin: 0 auto; /* Centre horizontalement */
+  margin-top: 50px;
   padding: 20px;
+  background-color: #343a40;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Utiliser toute la hauteur de la page */
+  background-color: #f0f2f5;
 }
 
 h2 {
   text-align: center;
-  color: #343a40;
+  color: white;
 }
 
 form {
+  width: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .form-group {
@@ -89,14 +126,14 @@ label {
   font-weight: bold;
   margin-bottom: 5px;
   display: block;
-  color: #495057;
+  color: white;
 }
 
 input[type="text"],
 textarea {
   width: 100%;
   padding: 10px;
-  border: 1px solid #dee2e6;
+  background-color: #ffffff1f;
   border-radius: 5px;
   box-sizing: border-box;
 }
@@ -115,4 +152,5 @@ textarea {
 .btn-submit:hover {
   background-color: #0056b3;
 }
+
 </style>

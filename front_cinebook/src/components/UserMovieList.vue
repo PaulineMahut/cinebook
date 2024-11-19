@@ -2,7 +2,8 @@
   <div class="movie-lists-container">
     <h2>Mes Listes de Films</h2>
     <div v-if="movieLists.length">
-      <carousel :items-to-show="4" :navigation-enabled="true">
+      <carousel :items-to-show="computedItemsToShow" :breakpoints="responsiveBreakpoints"
+      >
         <!-- Carte spéciale pour créer une nouvelle liste de films -->
         <slide
           v-for="list in movieLists"
@@ -61,6 +62,12 @@ export default {
   async mounted() {
     await this.fetchMovieLists();
   },
+  computed: {
+    computedItemsToShow() {
+      const maxItemsToShow = 6;
+      return this.movieLists ? Math.min(this.movieLists.length, maxItemsToShow) : 1;
+    },
+  },
   methods: {
     async fetchMovieLists() {
       const token = localStorage.getItem('token');
@@ -91,6 +98,20 @@ export default {
         alert(`Failed to fetch movie lists: ${error.message}`);
       }
     },
+    responsiveBreakpoints() {
+    // Calcul des breakpoints en fonction du nombre de films disponibles
+    return {
+      1200: { itemsToShow: this.computedItemsToShow },
+      1024: { itemsToShow: this.computedItemsToShow },
+      768: { itemsToShow: this.computedItemsToShow },
+      576: { itemsToShow: Math.min(this.movies.length, 4) },
+      0: { itemsToShow: Math.min(this.movies.length, 1) },
+    };
+  },
+    wrapAround() {
+    // Désactiver le wrap-around s'il y a moins d'éléments que le nombre à afficher
+    return this.movies.length > this.computedItemsToShow;
+  },
     getCoverPhotoUrl(path) {
       return `http://localhost:3000${path}`;
     },
@@ -100,19 +121,17 @@ export default {
 
 
 <style scoped>
+
 .movie-lists-container {
   margin: 20px;
-}
+  max-width: 100%;
 
-/* .carousel__slide {
-  margin-right: 15px;
-} */
+}
 
 .movie-list-card {
   width: 200px;
   height: 300px;
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
+  background-color: #343a40;
   border-radius: 10px;
   padding: 20px;
   text-align: center;
@@ -148,7 +167,7 @@ export default {
 
 .list-name {
   font-size: 18px;
-  color: #343a40;
+  color: white;
   text-align: center;
   margin-top: auto;
 }

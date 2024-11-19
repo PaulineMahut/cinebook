@@ -1,4 +1,5 @@
 <template>
+  <div class="container-page-login">
    <div class="title-log">
   <h1>Connexion</h1>
   <p>Vous n'avez pas de compte ? <router-link to="/register">Inscrivez-vous!</router-link> </p>
@@ -17,6 +18,7 @@
     <button class="button-login" type="submit">Login</button>
     <div v-if="error">{{ error }}</div>
   </form>
+</div>
 </template>
 
 <script>
@@ -64,6 +66,14 @@ export default {
 </script>
 
 <style scoped>
+
+.container-page-login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100vh;
+}
 
 .title-log {
   margin-bottom: 30px;

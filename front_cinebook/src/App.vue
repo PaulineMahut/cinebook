@@ -74,9 +74,9 @@ export default {
   margin-bottom: 50px;
 }
 
-.carousel__slide {
+/* .carousel__slide {
   align-items: baseline !important;
-}
+} */
 
 .notification-success {
   background-color: #d4edda; /* Vert clair pour les notifications de succès */

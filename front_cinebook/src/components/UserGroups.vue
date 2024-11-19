@@ -2,7 +2,7 @@
   <div class="groups-container">
     <h2>Mes Groupes</h2>
     <div v-if="groups.length">
-      <carousel :items-to-show="4" :navigation-enabled="true">
+      <carousel :items-to-show="computedItemsToShow" :breakpoints="responsiveBreakpoints" :center-mode="false">
         <slide
           v-for="group in groups"
           :key="group.id"
@@ -54,6 +54,12 @@ export default {
   async mounted() {
     await this.fetchGroups();
   },
+  computed: {
+    computedItemsToShow() {
+      const maxItemsToShow = 6;
+      return this.groups ? Math.min(this.groups.length, maxItemsToShow) : 1;
+    },
+  },
   methods: {
     async fetchGroups() {
       const token = localStorage.getItem('token');
@@ -84,6 +90,20 @@ export default {
         alert(`Failed to fetch groups: ${error.message}`);
       }
     },
+    responsiveBreakpoints() {
+    // Calcul des breakpoints en fonction du nombre de films disponibles
+    return {
+      1200: { itemsToShow: this.computedItemsToShow },
+      1024: { itemsToShow: this.computedItemsToShow },
+      768: { itemsToShow: this.computedItemsToShow },
+      576: { itemsToShow: Math.min(this.movies.length, 4) },
+      0: { itemsToShow: Math.min(this.movies.length, 1) },
+    };
+  },
+    wrapAround() {
+    // Désactiver le wrap-around s'il y a moins d'éléments que le nombre à afficher
+    return this.movies.length > this.computedItemsToShow;
+  },
     getCoverPhotoUrl(path) {
       return `http://localhost:3000${path}`;
     },
@@ -97,14 +117,10 @@ export default {
   max-width: 100%;
 }
 
-/* .carousel__slide {
-  margin-right: 15px;
-} */
-
 .group-card {
   width: 200px;
   height: 300px;
-  background-color: #f8f9fa;
+  background-color: #343a40;
   border: 1px solid #dee2e6;
   border-radius: 10px;
   padding: 20px;
@@ -117,6 +133,11 @@ export default {
   margin: 0 10px;
 }
 
+.special-card {
+  background-image: url('/public/group_img.png');
+  background-size: cover;
+  background-position: center;
+}
 
 .add-button {
   font-size: 48px;
@@ -142,7 +163,7 @@ export default {
 
 .group-name {
   font-size: 18px;
-  color: #343a40;
+  color: white;
   text-align: center;
   margin-top: auto;
 }

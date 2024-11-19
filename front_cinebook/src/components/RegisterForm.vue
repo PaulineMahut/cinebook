@@ -1,4 +1,5 @@
 <template>
+  <div class="container-page-register">
   <div class="title-log">
   <h1>Créer un compte</h1>
   <p>Vous avez déjà un compte ? <router-link to="/login">Se connecter</router-link> </p>
@@ -17,6 +18,7 @@
     <button class="button-register" type="submit">Register</button>
     <div v-if="error">{{ error }}</div>
   </form>
+</div>
 </template>
 
 <script>
@@ -26,6 +28,7 @@ export default {
       email: '',
       password: '',
       error: null,
+      defaultProfilePicture: 'user_defaut.png'
     };
   },
   methods: {
@@ -39,6 +42,7 @@ export default {
           body: JSON.stringify({
             email: this.email,
             password: this.password,
+            profilePicture: this.defaultProfilePicture,
           }),
         });
 
@@ -59,6 +63,14 @@ export default {
 </script>
 
 <style scoped>
+
+.container-page-register {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100vh;
+}
 
 .title-log {
   margin-bottom: 30px;

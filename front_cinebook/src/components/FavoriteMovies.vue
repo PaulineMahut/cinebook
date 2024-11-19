@@ -1,31 +1,68 @@
 <template>
-    <div class="bloc-carrousel">
-        <h2>Liste des Films Favoris</h2>
-        <div v-if="movies.length" class="movies-grid">
-            <div v-for="movie in movies" :key="movie.tmdbId" class="movie-item">
-                <router-link :to="{ name: 'MovieDetails', params: { id: movie.tmdbId } }">
-                    <img v-if="movie.poster_path" :src="getPosterUrl(movie.poster_path)" alt="Movie Poster" />
-                    <h3>{{ movie.title }}</h3>
-                    <!-- <p>{{ movie.release_date }}</p> -->
-                </router-link>
-            </div>
-        </div>
-        <div v-else>
-            <p>Aucun film favori trouvé.</p>
-        </div>
+    <div class="carousel-favoris">
+      <h2>Liste des Films Favoris</h2>
+      <div v-if="movies.length">
+        <carousel
+        :items-to-show="computedItemsToShow"
+  :breakpoints="responsiveBreakpoints"
+  :wrap-around="wrapAround"
+        >
+          <slide v-for="movie in movies" :key="movie.tmdbId">
+            <router-link :to="{ name: 'MovieDetails', params: { id: movie.tmdbId } }">
+              <img v-if="movie.poster_path" :src="getPosterUrl(movie.poster_path)" alt="Movie Poster" class="carousel-img" />
+              <h3>{{ movie.title }}</h3>
+            </router-link>
+          </slide>
+          <template #addons>
+            <Navigation />
+          </template>
+        </carousel>
+      </div>
+      <div v-else>
+        <p>Aucun film favori trouvé.</p>
+      </div>
     </div>
-</template>
-
+  </template>
+  
 <script>
 import { fetchMovieDetails } from '@/services/tmdbService';
+import { Carousel, Navigation, Slide, Pagination } from 'vue3-carousel'; // Importer le carrousel et les slides
+import 'vue3-carousel/dist/carousel.css';
+
 
 export default {
     name: 'FavoriteMovies',
     data() {
         return {
-            movies: [] // Initialiser un tableau vide pour stocker les films
+            movies: [],
         };
     },
+    components: {
+    Carousel,
+    Slide,
+    Navigation,
+    Pagination,
+    }, computed: {
+        computedItemsToShow() {
+  const maxItemsToShow = 7;
+  return this.movies ? Math.min(this.movies.length, maxItemsToShow) : 1;
+},
+  responsiveBreakpoints() {
+    // Calcul des breakpoints en fonction du nombre de films disponibles
+    return {
+      1200: { itemsToShow: this.computedItemsToShow },
+      1024: { itemsToShow: this.computedItemsToShow },
+      768: { itemsToShow: this.computedItemsToShow },
+      576: { itemsToShow: Math.min(this.movies.length, 4) },
+      0: { itemsToShow: Math.min(this.movies.length, 1) },
+    };
+  },
+  wrapAround() {
+    // Désactiver le wrap-around s'il y a moins d'éléments que le nombre à afficher
+    return this.movies.length > this.computedItemsToShow;
+  },
+},
+
     methods: {
         async fetchMovies() {
             try {
@@ -61,24 +98,44 @@ export default {
     },
     mounted() {
         this.fetchMovies(); // Appeler fetchMovies lorsque le composant est monté
-    }
+        window.addEventListener('resize', this.handleResize);
+
+    },
+    beforeDestroy() {
+    window.removeEventListener('resize', this.handleResize);
+  },
 };
 </script>
 
 <style>
-.movies-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px; /* Espacement entre les films */
+
+.carousel-favoris h2 {
+    margin-bottom: 50px;
 }
 
-.movie-item {
-    width: 200px; /* Largeur fixe pour chaque film */
-    text-align: center; /* Centrer le texte */
+.carousel-img {
+  width: 100%; /* Pour s'assurer que les images s'adaptent au carrousel */
+  height: auto; /* Maintient le rapport d'aspect des images */
+  border-radius: 7px;
 }
 
-.movie-item img {
-    width: 100%; /* Remplir la largeur du conteneur */
-    height: auto; /* Maintenir le ratio d'aspect */
+.carousel__slide {
+  align-items: normal;
 }
+
+.carousel-favoris .carousel__slide {
+  margin-right: 15px;
+}
+
+.carousel__prev {
+  left: -50px;
+}
+
+.carousel__next {
+  right: -50px;
+}
+.carousel-favoris .carousel__prev, .carousel__next {
+  color: turquoise;
+}
+
 </style>

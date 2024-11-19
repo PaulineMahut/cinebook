@@ -1,9 +1,5 @@
 <template>
   <div class="bloc-searchbar">
-    <h3></h3>
-
-    <div>
-
     <div class="search-bar">
       <input
         v-model="query"
@@ -28,8 +24,6 @@
       <button @click="searchMovies"><i class="fas fa-search"></i></button>
     </div>
 
-  </div>
-
     <div v-if="errorMessage">{{ errorMessage }}</div>
 
     <div v-if="filteredMovies.length" class="search-movie-list">
@@ -47,8 +41,8 @@
         </template>
       </carousel>
     </div>
-    <div v-else>
-      <p>No movies found.</p>
+    <div v-else-if="hasSearched">
+      <p>Aucun film n'a été trouvé</p>
     </div>
   </div>
 </template>
@@ -75,6 +69,7 @@ export default {
       errorMessage: '',
       defaultImage: defaultImage,
       years: this.generateYears(),
+      hasSearched: false,
     };
   },
   computed: {
@@ -94,6 +89,7 @@ export default {
     async searchMovies() {
       try {
         this.errorMessage = '';
+        this.hasSearched = true;
         this.movies = await fetchMoviesByCriteria(this.selectedGenreId, this.selectedYear, this.query);
       } catch (error) {
         this.errorMessage = error.message;
@@ -124,6 +120,7 @@ export default {
 
 .search-movie-list {
   margin-top: 20px;
+  max-width: 1380px;
 }
 
 .carousel-img {
@@ -141,7 +138,6 @@ export default {
 }
 
 .search-bar select {
-  /* background-color: rgba(3, 8, 27, 0.3); */
   color: #ffffff; /* Couleur du texte */
   border: 1px solid #ccc; /* Bordure */
   padding: 5px 15px 5px 15px; /* Espacement interne */
@@ -155,6 +151,7 @@ export default {
   padding: 5px 15px 5px 15px; /* Espacement interne */
   justify-content: space-around;
   display: flex;
+  border: 1px solid #ffffff29
 }
 
 .search-bar input{
@@ -164,5 +161,19 @@ export default {
 select option {
   background-color: #f0f0f0; /* Couleur de fond gris clair pour les options */
   color: #333; /* Couleur du texte pour les options */
+}
+
+.bloc-searchbar {
+  justify-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 100px 0 100px;
+}
+
+@media (max-width: 800px) {
+  .search-bar {
+    width: fit-content;
+  }
 }
 </style>
