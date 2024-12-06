@@ -27,7 +27,7 @@ export default {
         <div><img class="logo" src="@/assets/logo_traitsclair.png" alt=""></div>
         <div></div>
       </span>
-      <span v-else><img class="logo" src="@/assets/logo_traitsclair.png" alt=""></span>
+      <span v-else><img class="logo" src="@/assets/logo_traitsclair.png" alt="logo de l'application"></span>
     </h1>
 
     <SidebarLink to="/" icon="fas fa-home">Home</SidebarLink>

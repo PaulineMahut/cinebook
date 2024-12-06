@@ -9,7 +9,7 @@
         >
           <slide v-for="movie in movies" :key="movie.tmdbId">
             <router-link :to="{ name: 'MovieDetails', params: { id: movie.tmdbId } }">
-              <img v-if="movie.poster_path" :src="getPosterUrl(movie.poster_path)" alt="Movie Poster" class="carousel-img" />
+              <img v-if="movie.poster_path" :src="getPosterUrl(movie.poster_path)" alt="Poster du film" class="carousel-img" />
               <h3>{{ movie.title }}</h3>
             </router-link>
           </slide>
@@ -68,7 +68,7 @@ export default {
         async fetchMovies() {
             try {
                 const token = localStorage.getItem('token'); // Récupérez le token stocké
-                const response = await fetch('http://localhost:3000/api/movies', {
+                const response = await fetch('http://localhost:3000/api/userMovies', {
                     headers: {
                         Authorization: `Bearer ${token}`, // Inclure le token dans l'en-tête
                     },

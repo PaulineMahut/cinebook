@@ -30,6 +30,9 @@ const store = createStore({
     setGroupCount(state, count) {
       state.groupCount = count;
     },
+    setErrorMessage(state, message) { // Ajoutez cette mutation
+      state.errorMessage = message;
+    },
   },
   actions: {
     checkAuthentication({ commit }) {
@@ -107,6 +110,9 @@ const store = createStore({
     },
     setNotificationMessage({ commit }, message) {
       commit('setNotificationMessage', message);
+    },
+    clearErrorMessage({ commit }) { // Ajoutez cette action
+      commit('setErrorMessage', '');
     },
   },
 });

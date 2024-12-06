@@ -115,14 +115,16 @@ export default {
       }
     },
     getProfilePictureUrl(path) {
+      if (!path) {
+        return 'http://localhost:3000/images/user_defaut.png'; // Chemin de l'image par défaut
+      }
       if (path.startsWith('/images/')) {
-      return `http://localhost:3000${path}`;
-    } else if (path.startsWith('/uploads/')) {
-      return `http://localhost:3000${path}`;
-    } else {
-      return `http://localhost:3000/uploads/${path}`;
-    }      console.log('URL complète de la photo de profil:', url);
-      return url;
+        return `http://localhost:3000${path}`;
+      } else if (path.startsWith('/uploads/')) {
+        return `http://localhost:3000${path}`;
+      } else {
+        return `http://localhost:3000/uploads/${path}`;
+      }
     },
     clearNotification() {
       this.clearNotificationMessage();
@@ -178,8 +180,7 @@ export default {
 }
 
 .profile-card {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
+  background-color: #343a40;
   border-radius: 10px;
   padding: 20px;
   width: 100%;
@@ -199,7 +200,7 @@ export default {
 .profile-pseudo {
   margin-bottom: 20px;
   font-size: 24px;
-  color: #343a40;
+  color: white;
 }
 
 .profile-stats {

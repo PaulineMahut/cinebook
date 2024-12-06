@@ -1,7 +1,6 @@
 <template>
-  <div>
-    <h1>Localisation de ma Position et Cinémas autour</h1>
-    <button @click="recenterMap" style="margin-bottom: 10px;">Recentrer sur ma position</button>
+  <div class="container-map">
+    <button class="button-map" @click="recenterMap">Recentrer sur ma position</button>
     <div id="map" ref="mapElement" style="height: 500px;"></div>
     <div v-if="loading">Chargement des cinémas...</div>
     <div v-if="error" class="error">{{ error }}</div>
@@ -12,20 +11,22 @@
 import { onMounted, ref } from 'vue';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import 'leaflet-color-markers';
+
 
 export default {
   name: 'Localisation',
   setup() {
     const mapElement = ref(null);
-    let map = null; // Initialiser avec null pour éviter les erreurs
-    let userMarker = null; // Déclaration du marqueur de l'utilisateur
-    const cinemas = ref([]); // Liste des cinémas
-    const loading = ref(true); // État de chargement
-    const error = ref(''); // État d'erreur
+    let map = null; 
+    let userMarker = null; 
+    const cinemas = ref([]); 
+    const loading = ref(true); 
+    const error = ref(''); 
 
     onMounted(() => {
       console.log('Composant monté, vérification de mapElement');
-      console.log(mapElement.value); // Vérifier si le conteneur est présent
+      console.log(mapElement.value); 
 
       // Vérifier que le conteneur de la carte est monté
       if (mapElement.value) {
@@ -53,7 +54,7 @@ export default {
               map.setView([userLat, userLng], 13);
 
               // Ajouter un marqueur à la position de l'utilisateur
-              userMarker = L.marker([userLat, userLng]).addTo(map)
+              userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
                 .bindPopup('Vous êtes ici!')
                 .openPopup();
 
@@ -72,7 +73,17 @@ export default {
       }
     });
 
-    const loadCinemas = async (lat, lng) => {
+  const userIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+
+  const loadCinemas = async (lat, lng) => {
   console.log('Chargement des cinémas à proximité de:', lat, lng);
   let allCinemas = [];
   let page = 1;
@@ -84,7 +95,8 @@ export default {
     while (true) {
       console.log(`Chargement de la page ${page}`);
       
-      const response = await fetch(`https://data.culture.gouv.fr/api/explore/v2.1/catalog/datasets/etablissements-cinematographiques/records?limit=${pageSize}&start=${(page - 1) * pageSize}`);
+      const response = await fetch(`https://data.culture.gouv.fr/api/explore/v2.1/catalog/datasets/etablissements-cinematographiques/records?limit=${pageSize}&start=${
+      (page - 1) * pageSize}`);
       
       if (!response.ok) {
         throw new Error('Erreur lors du chargement des cinémas');
@@ -135,11 +147,19 @@ export default {
 
     console.log('Cinémas les plus proches:', cinemas.value);
 
-    // Afficher les cinémas sur la carte
-    cinemas.value.forEach(cinema => {
-      const marker = L.marker([cinema.latitude, cinema.longitude]).addTo(map);
-      marker.bindPopup(`<b>${cinema.name}</b><br>${cinema.adresse}<br>Distance: ${cinema.distance.toFixed(2)} km`).openPopup();
-    });
+    const cinemaIcon = L.divIcon({
+  html: '<i class="fa-solid fa-film" style="color: white; font-size: 16px; background-color:#03081B; padding: 8px; border-radius:20px;"></i>',
+  className: 'custom-cinema-icon', 
+  iconSize: [24, 24], // Taille de l'icône
+  iconAnchor: [12, 12], // Point d'ancrage de l'icône
+  popupAnchor: [0, -12], // Position du popup par rapport à l'icône
+});
+
+// Afficher les cinémas sur la carte
+cinemas.value.forEach(cinema => {
+  const marker = L.marker([cinema.latitude, cinema.longitude], { icon: cinemaIcon }).addTo(map);
+  marker.bindPopup(`<b>${cinema.name}</b><br>${cinema.adresse}<br>Distance: ${cinema.distance.toFixed(2)} km`);
+});
 
   } catch (err) {
     console.error(err);
@@ -202,4 +222,24 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   height: 500px;
   width: 100%;
 }
+
+.container-map {
+  text-align: center;
+}
+
+.button-map {
+  margin: 20px auto; /* Centrer verticalement avec un espace */
+  padding: 10px 20px;
+  border: #5DF6FF 1px solid;
+  border-radius: 20px;
+  display: inline-block; /* Nécessaire pour bien fonctionner avec text-align */
+  cursor: pointer;
+}
+
+.custom-cinema-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 </style>

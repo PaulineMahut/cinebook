@@ -1,39 +1,40 @@
 <template>
-  <div class="movie-list-details-container">
-    <div v-if="notificationMessage" :class="notificationClass">
-      {{ notificationMessage }}
-      <button @click="clearNotification" class="close-btn">&times;</button>
+  <div class="page-container">
+    <div class="movie-list-details-container">
+      <div v-if="notificationMessage" :class="notificationClass">
+        {{ notificationMessage }}
+        <button @click="clearNotification" class="close-btn">&times;</button>
+      </div>
+      <div v-if="errorMessage" class="error-message">
+      {{ errorMessage }}
     </div>
-    <div v-if="movieList" class="movie-list-details-card">
-      <h2>Liste "{{ movieList.name }}"</h2>
-      <p v-if="movieList.user">Liste créée par {{ movieList.user.pseudo || movieList.user.email }}</p>
-      <p>{{ movieList.description }}</p>
-      <h4>Films</h4>
-      <div class="movies-container">
-        <div v-for="item in movieList.items" :key="item.id" class="movie-item">
-          <img v-if="posterCache[item.tmdbId]" :src="posterCache[item.tmdbId]" alt="Affiche du film" class="movie-poster" />
-          <div class="movie-info">
-            <h3>{{ item.title }}</h3>
-            <button v-if="isCreator" @click="removeMovieFromList(item.id)" class="btn-remove">Retirer</button>
-          </div>
+      <div v-if="movieList" class="movie-list-details-card">
+        <h2>Liste "{{ movieList.name }}" de <p v-if="movieList.user">{{ movieList.user.pseudo || movieList.user.email }}</p> </h2>
+        <p class="list-description">{{ movieList.description }}</p>
+        <div class="movies-container">
+          <div v-for="item in movieList.items" :key="item.id" class="movie-item">
+  <button v-if="isCreator" @click="removeMovieFromList(item.id)" class="btn-remove">&times;</button>
+  <img v-if="posterCache[item.tmdbId]" :src="posterCache[item.tmdbId]" alt="Affiche du film" class="movie-poster" />
+  <div class="movie-info">
+    <h3>{{ item.title }}</h3>
+  </div>
+</div>
+        </div>
+        <SearchBar class="search-bar-movielist" @movieSelected="addMovieToList" />
+        <div v-if="isCreator" class="creator-options">
+          <select class="select-group" v-model="selectedGroupId">
+            <option  disabled value="">Sélectionnez un groupe</option>
+            <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+          </select>
+          <button @click="shareListWithGroup" :disabled="!selectedGroupId" class="btn-share">Partager</button>
+          <div class="button-container">
+          <button @click="goToCreateVotingSession" class="btn-vote">Lancer une session de vote</button>
+          <button @click="deleteMovieList" class="btn-delete">Supprimer la Liste</button>
+        </div>
         </div>
       </div>
-      <h4>Ajouter un Film</h4>
-      <SearchBar @movieSelected="addMovieToList" />
-      <div v-if="isCreator" class="creator-options">
-        <h4>Partager la Liste</h4>
-        <select v-model="selectedGroupId">
-          <option disabled value="">Sélectionnez un groupe</option>
-          <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
-        </select>
-        <button @click="shareListWithGroup" :disabled="!selectedGroupId" class="btn-share">Partager</button>
-        <h4>Lancer une session de vote</h4>
-        <button @click="goToCreateVotingSession" class="btn-vote">Lancer une session de vote</button>
-        <h4>Supprimer la Liste</h4>
-        <button @click="deleteMovieList" class="btn-delete">Supprimer la Liste</button>
-      </div>
+      <p v-else>Chargement des détails de la liste de films...</p>
     </div>
-    <p v-else>Chargement des détails de la liste de films...</p>
   </div>
 </template>
 
@@ -41,6 +42,7 @@
 import SearchBar from '@/components/SearchBar.vue';
 import { fetchMovieDetails } from '@/services/tmdbService';
 import { mapState, mapActions } from 'vuex';
+import { useToast } from 'vue-toastification';
 
 export default {
   props: ['id'],
@@ -63,6 +65,8 @@ export default {
     notificationClass() {
       return this.notificationMessage.includes('succès') ? 'notification-success' : 'notification-error';
     },
+    ...mapState(['errorMessage']),
+
   },
   async mounted() {
     await this.loadMovieListDetails();
@@ -74,40 +78,41 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['clearErrorMessage']),
     ...mapActions(['clearNotificationMessage']),
     async loadMovieListDetails() {
-      const token = localStorage.getItem('token');
-      try {
-        const response = await fetch(`http://localhost:3000/api/movie-lists/${this.id}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`http://localhost:3000/api/movie-lists/${this.id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-        if (response.ok) {
-          this.movieList = await response.json();
+    if (response.ok) {
+      this.movieList = await response.json();
 
-          const userId = JSON.parse(atob(token.split('.')[1])).userId;
-          this.isCreator = this.movieList.user.id === userId;
+      const userId = JSON.parse(atob(token.split('.')[1])).userId;
+      this.isCreator = this.movieList.user.id === userId;
 
-          // Vérifiez si la liste est partagée
-          const sharedResponse = await fetch(`http://localhost:3000/api/lists/${this.id}/shared`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
+      // Vérifiez si la liste est partagée
+      const sharedResponse = await fetch(`http://localhost:3000/api/movie-lists/${this.id}/shared`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-          if (sharedResponse.ok) {
-            const sharedData = await sharedResponse.json();
-            this.isShared = sharedData.isShared;
-          }
-        }
-      } catch (error) {
-        console.error('Erreur de récupération des détails de la liste de films:', error);
+      if (sharedResponse.ok) {
+        const sharedData = await sharedResponse.json();
+        this.isShared = sharedData.isShared;
       }
-    },
+    }
+  } catch (error) {
+    console.error('Erreur de récupération des détails de la liste de films:', error);
+  }
+},
     async loadUserGroups() {
       const token = localStorage.getItem('token');
       console.log('Fetching user groups');
@@ -131,16 +136,18 @@ export default {
       }
     },
     async shareListWithGroup() {
+      const toast = useToast();
       const token = localStorage.getItem('token');
       console.log(`Sharing list with group ID: ${this.selectedGroupId}`);
 
       if (!this.selectedGroupId) {
         console.error('Aucun groupe sélectionné');
+        toast.error('Aucun groupe sélectionné');
         return;
       }
 
       try {
-        const response = await fetch(`http://localhost:3000/api/lists/${this.id}/share`, {
+        const response = await fetch(`http://localhost:3000/api/movie-lists/${this.id}/share`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -154,13 +161,41 @@ export default {
         if (response.ok) {
           console.log('Liste partagée avec succès');
           this.isShared = true; // Mettre à jour l'état de partage
+          toast.success('Liste partagée avec succès');
+        } else if (response.status === 409) {
+          const errorData = await response.json();
+          toast.error('La liste est déjà partagée avec ce groupe');
         } else {
-          console.error('Erreur lors du partage de la liste');
+          const errorData = await response.json();
+          toast.error(errorData.error);
         }
       } catch (error) {
         console.error('Erreur lors du partage de la liste:', error);
+        toast.error('Erreur lors du partage de la liste');
       }
     },
+    async checkIfListIsShared(listId) {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`http://localhost:3000/api/movie-lists/${listId}/shared`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.isShared;
+    } else {
+      console.error('Erreur lors de la vérification du partage de la liste');
+      return false;
+    }
+  } catch (error) {
+    console.error('Erreur lors de la vérification du partage de la liste:', error);
+    return false;
+  }
+},
     async addMovieToList(movie) {
       const token = localStorage.getItem('token');
 
@@ -193,6 +228,7 @@ export default {
       }
     },
     async deleteMovieList() {
+      const toast = useToast();
       const token = localStorage.getItem('token');
       try {
         const response = await fetch(`http://localhost:3000/api/movie-lists/${this.id}`, {
@@ -203,13 +239,15 @@ export default {
         });
 
         if (response.ok) {
-          this.$store.commit('setNotificationMessage', 'Liste supprimée avec succès');
+          toast.success('Liste supprimée avec succès');
           this.$router.push({ name: 'Profile' }); // Redirigez vers la liste des films après suppression
         } else {
           console.error('Erreur lors de la suppression de la liste');
+          toast.error('Erreur lors de la suppression de la liste');
         }
       } catch (error) {
         console.error('Erreur lors de la suppression de la liste:', error);
+        toast.error('Erreur lors de la suppression de la liste');
       }
     },
     async removeMovieFromList(itemId) {
@@ -274,12 +312,12 @@ export default {
       }
     },
     goToCreateVotingSession() {
-      if (!this.isShared) {
-        this.$store.commit('setNotificationMessage', 'Il faut partager la liste avec un de vos groupes avant de pouvoir lancer un vote');
-        return;
-      }
-      this.$router.push({ name: 'create-voting-session', query: { movieListId: this.id } });
-    },
+  if (!this.isShared) {
+    this.$store.commit('setNotificationMessage', 'Il faut partager la liste avec un de vos groupes avant de pouvoir lancer un vote');
+    return;
+  }
+  this.$router.push({ name: 'create-voting-session', query: { movieListId: this.id } });
+},
     clearNotification() {
       this.clearNotificationMessage();
     },
@@ -288,16 +326,38 @@ export default {
 </script>
 
 <style scoped>
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
+
+body, html {
+  height: 100%;
+  margin: 0;
+}
+
+.page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 50px;
+}
+
 .movie-list-details-container {
-  margin: 50px 200px 50px 200px;
-  background-color: #343a40;
+  max-width: max-content;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
+}
+
+.select-group {
+  border-radius: 15px;
+  background-color: rgba(98, 104, 111, 0.3);
+  color: white;
+  border: none;
 }
 
 h2 {
@@ -311,6 +371,10 @@ h3 {
   margin-bottom: 10px;
 }
 
+.list-description {
+  color: white;
+  margin-bottom: 50px;
+}
 p {
   color: white;
   margin-bottom: 20px;
@@ -321,6 +385,35 @@ h4 {
   margin-bottom: 10px;
 }
 
+.btn-share {
+  background-color: transparent !important;
+  border: 1px solid #5DF6FF !important;
+  border-radius: 13px !important ;
+}
+
+.btn-share:hover {
+  background-color: #5DF6FF !important;
+}
+
+.btn-vote {
+  background-color: transparent !important;
+  border: 1px solid #5DF6FF !important;
+  border-radius: 13px !important ;
+}
+
+.btn-vote:hover {
+  background-color: #5DF6FF !important;
+}
+
+.btn-delete {
+  background-color: #D06D6D !important;
+  border-radius: 13px !important ;
+}
+.btn-delete:hover {
+  background-color: #EC5A5A !important;
+  border-radius: 13px !important ;
+}
+
 .movies-container {
   display: flex;
   flex-wrap: wrap;
@@ -328,6 +421,7 @@ h4 {
 }
 
 .movie-item {
+  position: relative; /* Ajoutez cette ligne */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -335,28 +429,38 @@ h4 {
   margin-bottom: 20px;
 }
 
+.btn-remove {
+  position: absolute; /* Ajoutez cette ligne */
+  top: -12px; /* Ajustez la position selon vos besoins */
+  right: 18px; /* Ajustez la position selon vos besoins */
+  background-color: #03081B; /* Rendre le fond transparent */
+  color: #2BA3E8; /* Couleur de la croix */
+  border: none; /* Supprimer la bordure */
+  font-size: 20px; /* Taille de la croix */
+  cursor: pointer;
+  padding: 0 5px 0 5px;
+  border-radius: 100px;
+}
+
+.btn-remove:hover {
+  color: darkred; /* Couleur de la croix au survol */
+}
+
 .movie-poster {
-  width: 100px;
+  width: 70%;
   height: auto;
   margin-bottom: 10px;
+  border-radius: 10px;
 }
 
 .movie-info {
   text-align: center;
 }
 
-.btn-remove {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.btn-remove:hover {
-  background-color: #c82333;
+.search-bar-movielist {
+  background-color: rgba(98, 104, 111, 0.3);
+  border-radius: 20px;
+  align-content: center;
 }
 
 .creator-options {
@@ -432,5 +536,11 @@ select {
   border: none;
   font-size: 20px;
   cursor: pointer;
+}
+
+.creator-options .button-container {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
 }
 </style>

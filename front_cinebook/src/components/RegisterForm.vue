@@ -14,6 +14,10 @@
         <label for="password">Password:</label>
         <input type="password" v-model="password" required />
       </div>
+      <div class="form-input">
+          <input type="checkbox" id="rgpd" v-model="rgpdAccepted" />
+          <label for="rgpd">J'accepte les <a href="/rgpd">conditions générales</a></label>
+        </div>
     </div>
     <button class="button-register" type="submit">Register</button>
     <div v-if="error">{{ error }}</div>
@@ -27,6 +31,7 @@ export default {
     return {
       email: '',
       password: '',
+      rgpdAccepted: false,
       error: null,
       defaultProfilePicture: 'user_defaut.png'
     };
@@ -41,6 +46,7 @@ export default {
           },
           body: JSON.stringify({
             email: this.email,
+            rgpdAccepted: this.rgpdAccepted,
             password: this.password,
             profilePicture: this.defaultProfilePicture,
           }),
@@ -79,6 +85,11 @@ export default {
 .title-log h1 {
   margin-bottom: 20px;
 }
+
+.form-input input[type="checkbox"] {
+  margin-right: 10px;
+}
+
 .form-inputs {
   display: flex;
   flex-wrap: wrap;

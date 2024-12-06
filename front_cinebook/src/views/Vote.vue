@@ -1,6 +1,6 @@
 <template>
   <div v-if="votingSession" class="vote-page-container">
-    <div class="voting-session-header">
+    <div class="voting-session-header voting-container">
       <p v-if="votingSession.movieList.user">
         Un vote a été lancé par <span>{{ votingSession.movieList.user.pseudo }} !</span>
       </p>
@@ -8,57 +8,59 @@
     </div>
 
     <div class="voting-center">
-
-  
-
-    <div class="voting-session-details">
-      <div class="session-info">
-        <div class="info-item">
-          <i class="fa-solid fa-user-group"></i>
-          <span>{{ totalVotes }} votes</span>
-        </div>
-        <div class="info-item right-align">
-          <i class="fa-solid fa-clock"></i>
-          <span>{{ formatTimeRemaining(timeRemaining) }}</span>
+      <div class="voting-session-details">
+        <div class="session-info">
+          <div class="info-item">
+            <i class="fa-solid fa-user-group"></i>
+            <span>{{ totalVotes }} votes</span>
+          </div>
+          <div class="info-item right-align">
+            <i class="fa-solid fa-clock"></i>
+            <span>{{ formatTimeRemaining(timeRemaining) }}</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div v-if="timeRemaining > 0" class="form-vote">
-      <form @submit.prevent="voteForMovie">
-        <div v-for="item in votingSession.movieList.items" :key="item.id" class="movie-radio-container" :class="{ selected: selectedMovieId === item.id }">
-          <input type="radio" :id="item.id" :value="item.id" v-model="selectedMovieId" required />
-          <label :for="item.id" class="movie-label">{{ item.title }}</label>
-        </div>
-        <button type="submit" class="btn-vote">Voter</button>
-      </form>
-    </div>
-
-    <div v-if="!timeRemaining" class="result-vote">
-      <h2>Le vote est terminé!</h2>
-      <div v-if="winningMovie" class="winning-result">
-        <span class="winning-movie-title">{{ winningMovie.title }}</span>
-        <p class="vote-text">a remporté le vote !</p>
-        <span class="winning-icon">🎉</span>
+      <div v-if="timeRemaining > 0" class="form-vote">
+        <form @submit.prevent="voteForMovie">
+          <div v-for="item in votingSession.movieList.items" :key="item.id" class="movie-radio-container" :class="{ selected: selectedMovieId === item.id }">
+            <input type="radio" :id="item.id" :value="item.id" v-model="selectedMovieId" required />
+            <label :for="item.id" class="movie-label">{{ item.title }}</label>
+          </div>
+          <button type="submit" class="btn-vote">Voter</button>
+        </form>
       </div>
-      <p v-else>Aucun vote n'a été enregistré</p>
-    </div>
 
-    <div v-if="votingSession.votes && votingSession.votes.length" class="voting-results">
-      <h2>Résultats des votes</h2>
-      <ul>
-        <li v-for="vote in votingSession.votes" :key="vote.id" class="vote-item">
-          <img :src="getProfilePictureUrl(vote.user.profilePicture)" alt="Photo de profil" class="profile-picture" />
-          <span>{{ vote.user.pseudo }} a voté pour {{ vote.movieListItem.title }} !</span>
-        </li>
-      </ul>
+      <div v-if="!timeRemaining" class="result-vote voting-container">
+        <h2>Le vote est terminé!</h2>
+        <div v-if="winningMovie" class="winning-result">
+          <span class="winning-movie-title">{{ winningMovie.title }}</span>
+          <p class="vote-text">a remporté le vote !</p>
+          <span class="winning-icon">🎉</span>
+        </div>
+        <p v-else>Aucun vote n'a été enregistré</p>
+      </div>
+
+      <div v-if="votingSession.votes && votingSession.votes.length" class="voting-results voting-container">
+        <h2>Résultats des votes</h2>
+        <ul>
+          <li v-for="vote in votingSession.votes" :key="vote.id" class="vote-item">
+            <div>
+              <img :src="getProfilePictureUrl(vote.user.profilePicture)" alt="Photo de profil" class="profile-picture" />
+              <span>{{ vote.user.pseudo }}</span>
+            </div>
+            <span> a voté pour {{ vote.movieListItem.title }} !</span>
+          </li>
+        </ul>
+      </div>
     </div>
-  </div>
   </div>
   <p v-else>Chargement des détails de la session de vote...</p>
 </template>
 
 <script>
+import { useToast } from 'vue-toastification';
+
 export default {
   data() {
     return {
@@ -92,11 +94,12 @@ export default {
         } else {
           const errorData = await response.json();
           console.error('Erreur lors de la récupération de la session de vote:', errorData.error);
-          alert(errorData.error);
+          this.$toast.error(errorData.error);
           this.$router.push('/');
         }
       } catch (error) {
         console.error('Erreur de récupération de la session de vote:', error);
+        this.$toast.error('Erreur de récupération de la session de vote');
       }
     },
     startCountdown() {
@@ -128,6 +131,7 @@ export default {
       return `${days}j ${hours}h ${minutes}m ${seconds}s`;
     },
     async voteForMovie() {
+      const toast = useToast();
       const sessionId = this.$route.params.sessionId;
       try {
         const response = await fetch(`http://localhost:3000/api/voting-sessions/${sessionId}/vote`, {
@@ -139,29 +143,96 @@ export default {
           body: JSON.stringify({ movieListItemId: this.selectedMovieId }),
         });
         if (response.ok) {
-          alert('Vote enregistré avec succès');
+          toast.success('Vote enregistré avec succès');
           await this.loadVotingSession();
         } else {
           const errorData = await response.json();
           console.error('Erreur lors de l\'enregistrement du vote:', errorData.error);
-          alert(errorData.error);
+          toast.error(errorData.error);
         }
       } catch (error) {
         console.error('Erreur lors de l\'enregistrement du vote:', error);
+        toast.error('Erreur lors de l\'enregistrement du vote');
       }
     },
     getProfilePictureUrl(path) {
-      return path ? `http://localhost:3000${path}` : 'default-profile.png'; // Remplacez 'default-profile.png' par le chemin de votre image par défaut
+      return path ? `http://localhost:3000${path}` : '/src/assets/user_defaut.png';c
     },
   },
 };
 </script>
 
 <style scoped>
+body, html {
+  height: 100%;
+  margin: 0;
+}
 
 .vote-page-container {
-  margin: 50px 200px 50px 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  margin-top: 100px;
 }
+
+.voting-container {
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+  background-color: rgba(3, 8, 27, 0.3);
+  border-radius: 20px;
+  margin: 20px 0;
+}
+
+.result-vote .winning-movie-title {
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.result-vote .winning-icon {
+  font-size: 60px;
+}
+
+/* Styles spécifiques à .voting-results */
+.voting-results ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.voting-results {
+  background-color: transparent;
+}
+
+.voting-results h2 {
+  margin-bottom: 50px;
+}
+
+.voting-results .vote-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  justify-content: space-between;
+}
+
+.voting-results .profile-picture {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.voting-session-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Alignez les éléments au début */
+  margin-bottom: 20px;
+  background-color: transparent;
+}
+
 .voting-session-header p {
   margin-bottom: 15px; /* Ajustez selon vos besoins */
 }
@@ -183,10 +254,12 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: -webkit-fill-available;
 }
 
 .result-vote {
-  width: 700px;
+  width: 100%;
+  max-width: 700px;
 }
 
 .result-vote h2 {
@@ -226,16 +299,15 @@ export default {
   color: #555;
 }
 
-
 .result-vote, .form-vote {
   text-align: center;
   background-color: rgba(3, 8, 27, 0.3);
-    height: auto;
-    min-width: 450px;
-    padding: 50px;
-    border-radius: 20px;
-    margin-top: 20px;
-    margin-bottom: 20px;
+  height: auto;
+  min-width: 450px;
+  padding: 50px;
+  border-radius: 20px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .result-vote .winning-movie-title {
@@ -245,12 +317,9 @@ export default {
   margin-bottom: 10px; /* Ajoutez de l'espace si nécessaire */
 }
 
-
 .winning-icon {
   font-size: 60px;
 }
-
-
 
 /* Style pour les résultats des votes */
 
@@ -353,5 +422,33 @@ button[type="submit"]:hover {
   height: 40px;
   border-radius: 50%;
   margin-right: 10px;
+}
+
+.vote-item span {
+  margin-left: 10px; /* Ajoutez un espacement entre la photo de profil et le texte */
+}
+
+/* Media queries pour rendre la page responsive */
+@media (max-width: 768px) {
+  .vote-page-container {
+    padding: 0 10px; /* Réduisez le padding pour les petits écrans */
+  }
+
+  .voting-session-details {
+    align-items: flex-start; /* Alignez les éléments au début */
+  }
+
+  .session-info {
+    align-items: flex-start; /* Alignez les éléments au début */
+  }
+
+  .info-item {
+    margin-bottom: 10px; /* Ajoutez un espacement entre les éléments */
+  }
+
+  .result-vote, .form-vote {
+    min-width: 100%; /* Prenez toute la largeur disponible */
+    padding: 20px; /* Réduisez le padding pour les petits écrans */
+  }
 }
 </style>

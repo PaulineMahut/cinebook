@@ -10,18 +10,18 @@
             <p class="time-notif-ago">{{ getTimeAgo(notification.createdAt) }}</p>
             <p v-if="notification.message" v-html="notification.message"></p>
             <p v-else-if="notification.type === 'friend_request' && notification.status === 'pending'">
-              {{ notification.sender.pseudo }} vous a envoyé une demande d'ami.
+              {{ notification.sender?.pseudo }} vous a envoyé une demande d'ami.
               <div class="choice-container">
                 <button @click="respondToFriendRequest(notification.id, 'accepted')" class="accepted-button">Accepter</button>
                 <button @click="respondToFriendRequest(notification.id, 'rejected')" class="rejected-button">Refuser</button>
               </div>
             </p>
             <p v-else-if="notification.type === 'group_invitation' && notification.status === 'pending'">
-              {{ notification.sender.pseudo }} vous a invité à rejoindre le groupe 
-              <router-link :to="'/groups/' + notification.group.id">{{ notification.group.name }}</router-link>.
+              {{ notification.sender?.pseudo }} vous a invité à rejoindre le groupe 
+              <router-link v-if="notification.group" :to="'/groups/' + notification.group.id">{{ notification.group.name }}</router-link>.
               <div class="choice-container">
-              <button @click="respondToGroupInvitation(notification.id, 'accepted', notification)" class="accepted-button">Accepter</button>
-              <button @click="respondToGroupInvitation(notification.id, 'rejected', notification)" class="rejected-button">Refuser</button>
+                <button @click="respondToGroupInvitation(notification.id, 'accepted', notification)" class="accepted-button">Accepter</button>
+                <button @click="respondToGroupInvitation(notification.id, 'rejected', notification)" class="rejected-button">Refuser</button>
               </div>
             </p>
             <p v-else-if="notification.type === 'user_joined_group'">
@@ -31,7 +31,7 @@
               {{ notification.message }}
             </p>
             <p v-else-if="notification.type === 'list_shared'">
-              {{ notification.sender.pseudo }} a partagé la liste 
+              {{ notification.sender?.pseudo }} a partagé la liste 
               <span v-if="notification.list">
                 <router-link :to="'/movie-list/' + notification.list.id">{{ notification.list.name }}</router-link>
               </span>
@@ -39,11 +39,11 @@
                 (Liste supprimée)
               </span>
               avec le groupe 
-              <router-link :to="'/group/' + notification.group.id">{{ notification.group.name }}</router-link>.
+              <router-link v-if="notification.group" :to="'/group/' + notification.group.id">{{ notification.group.name }}</router-link>.
             </p>
             <p v-else-if="notification.type === 'voting_session_started'">
               {{ notification.message }} 
-              <router-link :to="'/voting-sessions/' + notification.votingSessionId">Voir le vote</router-link>
+              <router-link v-if="notification.votingSessionId" :to="'/voting-sessions/' + notification.votingSessionId">Voir le vote</router-link>
             </p>
           </li>
         </ul>
@@ -147,7 +147,12 @@ export default {
       }
     },
     async respondToGroupInvitation(notificationId, response, originalNotification) {
-      const groupId = originalNotification.group.id; // Récupérer l'ID du groupe à partir de la notification
+      const groupId = originalNotification.group?.id; // Récupérer l'ID du groupe à partir de la notification
+
+      if (!groupId) {
+        console.error('Le groupe associé à cette invitation n\'existe plus.');
+        return;
+      }
 
       try {
         const res = await fetch(`http://localhost:3000/api/groups/${groupId}/invitations/respond`, {

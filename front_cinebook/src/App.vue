@@ -3,18 +3,8 @@
     <TopNavbar v-if="isAuthenticated" />
   </div>
 
-  <div id="appp">
-
-    <!-- <Sidebar v-if="isAuthenticated" /> -->
-    
-    <!-- <div :style="{ 'margin-left': isAuthenticated ? sidebarWidth : '0' }">
-      <div v-if="notificationMessage" :class="notificationClass">
-        {{ notificationMessage }}
-        <button @click="clearNotification" class="close-btn">&times;</button> -->
-      <!-- </div> -->
-      <router-view /> 
-     
-    <!-- </div> -->
+  <div :class="{'no-margin': $route.name === 'MovieDetails'}" id="appp">
+    <router-view /> 
   </div>
 </template>
 
@@ -106,5 +96,23 @@ export default {
   border: none;
   font-size: 20px;
   cursor: pointer;
+}
+
+#appp {
+  margin: 0 5rem;
+}
+
+#appp.no-margin {
+  margin: 0;
+}
+
+@media screen and (max-width: 768px) {
+  #appp {
+    margin: 0 2rem;
+  }
+  
+  #appp.no-margin {
+    margin: 0;
+  }
 }
 </style>

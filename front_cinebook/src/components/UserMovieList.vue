@@ -1,6 +1,9 @@
 <template>
   <div class="movie-lists-container">
-    <h2>Mes Listes de Films</h2>
+    <div class="header">
+      <h2>Mes Listes de Films</h2>
+      <router-link to="/all-movie-lists" class="view-all-link">Voir toutes mes listes</router-link>
+    </div>
     <div v-if="movieLists.length">
       <carousel 
         :items-to-show="computedItemsToShow" 
@@ -134,21 +137,36 @@ export default {
 
 
 <style scoped>
-
 .movie-lists-container {
-  margin-top: 50px;
-  margin-bottom: 50px;
+  margin-top: 200px;
+  margin-bottom: 200px;
   max-width: 100%;
 }
 
-.movie-lists-container h2 {
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 50px;
-} 
+}
 
+
+.view-all-link {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.view-all-link:hover {
+  text-decoration: underline;
+}
+.carousel__slide {
+  margin-right: 15px;
+}
 .movie-list-card {
   width: 200px;
   height: 300px;
-  background-color: #343a40;
+  background-color: #ffd566;
   border-radius: 10px;
   padding: 20px;
   text-align: center;
@@ -162,7 +180,7 @@ export default {
 
 .add-button {
   font-size: 48px;
-  background-color: #007bff;
+  background-color: #ffb900;
   color: white;
   border: none;
   border-radius: 50%;
@@ -187,5 +205,16 @@ export default {
   color: white;
   text-align: center;
   margin-top: auto;
+}
+
+.special-card {
+  background-image: url('http://localhost:3000/images/popcorn_img.jpg'); /* Exemple */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none; /* Si les bordures créent une différence visuelle */
+  padding: 0;
+  box-shadow: none;
+  border-radius: 10px;
 }
 </style>

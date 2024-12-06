@@ -1,21 +1,26 @@
 <template>
-  <div v-if="notificationMessage" :class="notificationClass">
+  <div>
+    <div v-if="notificationMessage" :class="notificationClass">
       {{ notificationMessage }}
       <button @click="clearNotification" class="close-btn">&times;</button>
+      <router-link v-if="createdListId" :to="{ name: 'MovieListDetails', params: { id: createdListId } }">
+        Voir la liste
+      </router-link>
     </div>
-  <div id="create-movie-list">
-    <h2>Créer une Liste de Films</h2>
-    <form @submit.prevent="createMovieList">
-      <div class="form-group">
-        <label for="name">Nom de la Liste:</label>
-        <input type="text" v-model="name" required />
-      </div>
-      <div class="form-group">
-        <label for="description">Description:</label>
-        <textarea v-model="description" required></textarea>
-      </div>
-      <button type="submit" class="btn-submit">Créer la Liste</button>
-    </form>
+    <div id="create-movie-list">
+      <h2>Créer une Liste de Films</h2>
+      <form @submit.prevent="createMovieList">
+        <div class="form-group">
+          <label for="name">Nom de la Liste:</label>
+          <input type="text" v-model="name" required />
+        </div>
+        <div class="form-group">
+          <label for="description">Description:</label>
+          <textarea v-model="description" required></textarea>
+        </div>
+        <button type="submit" class="btn-submit">Créer la Liste</button>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -27,6 +32,7 @@ export default {
     return {
       name: '',
       description: '',
+      createdListId: null, // Ajoutez cette ligne pour stocker l'ID de la liste créée
     };
   },
   computed: {
@@ -61,6 +67,7 @@ export default {
 
         const data = await response.json();
         console.log('Liste de films créée:', data);
+        this.createdListId = data.id; // Stockez l'ID de la liste créée
         this.setNotificationMessage('Liste de films créée avec succès');
         // Réinitialiser le formulaire ou rediriger l'utilisateur
         this.name = '';

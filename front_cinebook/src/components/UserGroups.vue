@@ -1,6 +1,9 @@
 <template>
   <div class="groups-container">
-    <h2>Mes Groupes</h2>
+    <div class="header">
+      <h2>Mes Groupes</h2>
+      <router-link to="/all-groups" class="view-all-link">Voir tous mes groupes</router-link>
+    </div>
     <div v-if="groups.length">
       <carousel 
         :items-to-show="computedItemsToShow" 
@@ -24,8 +27,12 @@
             v-else
             :to="{ name: 'GroupDetails', params: { id: group.id } }"
           >
-            <div class="group-card">
-              <img v-if="group.coverPhoto" :src="getCoverPhotoUrl(group.coverPhoto)" alt="Photo de couverture" class="cover-photo" />
+            <div
+              class="group-card"
+              :style="{
+                backgroundImage: group.coverPhoto ? `url(${getCoverPhotoUrl(group.coverPhoto)})` : 'none'
+              }"
+            >
               <h3 class="group-name">{{ group.name }}</h3>
             </div>
           </router-link>
@@ -64,7 +71,7 @@ export default {
       // Calcul des breakpoints en fonction du nombre de groupes disponibles
       return {
         1200: { itemsToShow: this.computedItemsToShow },
-        1024: { itemsToShow: Math.min(this.groups.length, 3)},
+        1024: { itemsToShow: Math.min(this.groups.length, 3) },
         768: { itemsToShow: Math.min(this.groups.length, 2) },
         576: { itemsToShow: Math.min(this.groups.length, 2) },
         0: { itemsToShow: Math.min(this.groups.length, 1) },
@@ -123,21 +130,44 @@ export default {
 </script>
 
 <style scoped>
-
 .groups-container {
-  margin-top: 50px;
+  margin-top: 200px;
   margin-bottom: 50px;
   max-width: 100%;
 }
 
-.groups-container h2 {
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 50px;
 }
 
-.group-card {
+.header h2 {
+  margin: 0;
+}
+
+.carousel__slide {
+  margin-right: 15px;
+}
+
+.view-all-link {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.view-all-link:hover {
+  text-decoration: underline;
+}
+
+.group-card,
+.special-card {
   width: 200px;
+  background-size: cover;
+  background-position: center;
   height: 300px;
-  background-color: #343a40;
+  background-color: #2a619b;
   border-radius: 10px;
   padding: 20px;
   text-align: center;
@@ -146,13 +176,18 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin: 0 10px;
+  box-sizing: border-box; /* Important pour aligner les tailles */
+  overflow: hidden; /* Empêche tout débordement de contenu */
 }
 
 .special-card {
-  background-image: url('/public/group_img.png');
+  background-image: url('http://localhost:3000/images/group_illu.jpg'); /* Exemple */
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
+  border: none; /* Si les bordures créent une différence visuelle */
+  padding: 0;
+  box-shadow: none;
 }
 
 .add-button {
@@ -169,19 +204,15 @@ export default {
   align-items: center;
 }
 
-.cover-photo {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-
 .group-name {
   font-size: 18px;
   color: white;
   text-align: center;
   margin-top: auto;
+  padding: 5px;
+  border-radius: 5px;
+  bottom: 0; /* Ajouté pour positionner le texte en bas */
+  width: 100%; /* Ajouté pour s'assurer que le texte prend toute la largeur */
 }
 
 /* Media query pour les écrans en dessous de 576 pixels */

@@ -19,6 +19,9 @@ import CreateVotingSession from '@/views/CreateVotingSession.vue';
 import Vote from '@/views/Vote.vue';
 import Settings from '@/views/Settings.vue'; // Importez la nouvelle vue
 import CreateMovieList from '../components/CreateMovieList.vue';
+import AllUserMovieList from '../views/AllUserMovieList.vue'; // Importez le nouveau composant
+import AllUserGroups from '../views/AllUserGroups.vue'; // Importez le nouveau composant
+import EditGroup from '../views/EditGroup.vue'; // Importez le nouveau composant
 
 const routes = [
     { path: '/', name: 'Home', component: Home },
@@ -72,6 +75,22 @@ const routes = [
         path: '/settings',
         name: 'Settings',
         component: Settings, // Ajoutez la route pour Settings
+    },
+    {
+        path: '/all-movie-lists',
+        name: 'AllUserMovieList',
+        component: AllUserMovieList, // Ajoutez la nouvelle route
+    },
+    {
+        path: '/all-groups',
+        name: 'AllUserGroups',
+        component: AllUserGroups, // Ajoutez la nouvelle route
+    },
+    {
+        path: '/groups/:id/edit',
+        name: 'EditGroup',
+        component: EditGroup, // Ajoutez la nouvelle route
+        props: true,
       },
 
 ];

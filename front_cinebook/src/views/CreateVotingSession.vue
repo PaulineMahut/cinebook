@@ -22,6 +22,8 @@
 </template>
 
 <script>
+import { useToast } from 'vue-toastification';
+
 export default {
   data() {
     return {
@@ -57,6 +59,7 @@ export default {
       }
     },
     async createVotingSession() {
+      const toast = useToast();
       try {
         const response = await fetch('http://localhost:3000/api/voting-sessions', {
           method: 'POST',
@@ -72,14 +75,18 @@ export default {
         });
         if (response.ok) {
           const result = await response.json();
-          alert('Session de vote créée avec succès');
-          this.$router.push(`/voting-sessions/${result.id}`);
+          toast.success('Session de vote créée avec succès');
+          setTimeout(() => {
+            this.$router.push(`/voting-sessions/${result.id}`);
+          }, 2000); // Rediriger après 2 secondes
         } else {
           const errorData = await response.json();
           console.error('Erreur lors de la création de la session de vote:', errorData.error);
+          toast.error('Erreur lors de la création de la session de vote');
         }
       } catch (error) {
         console.error('Erreur lors de la création de la session de vote:', error);
+        toast.error('Erreur lors de la création de la session de vote');
       }
     },
   },

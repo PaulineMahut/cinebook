@@ -54,6 +54,7 @@ export default {
         }
 
         const data = await response.json();
+        
         this.$store.dispatch('login', data.token); // Appeler l'action login avec le token
         this.$router.push('/Dashboard');
       } catch (err) {
